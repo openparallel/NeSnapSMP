@@ -1,5 +1,5 @@
 obj/local/armeabi/objs/opencv/FaceDetection.o: jni/FaceDetection.cpp \
- jni/FaceDetection.h \
+ jni/ImageProcessor.h \
  /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/stdlib.h \
  /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/sys/cdefs.h \
  /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/sys/cdefs_elf.h \
@@ -51,7 +51,7 @@ obj/local/armeabi/objs/opencv/FaceDetection.o: jni/FaceDetection.cpp \
  /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/machine/setjmp.h \
  jni/inc/NE10_c.h jni/inc/NE10_types.h jni/inc/NE10_types.h
 
-jni/FaceDetection.h:
+jni/ImageProcessor.h:
 
 /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/stdlib.h:
 

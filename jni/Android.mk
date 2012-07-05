@@ -359,7 +359,7 @@ LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -ldl -llog \
 LOCAL_SRC_FILES := \
 		$(ne10_source_files) \
         WLNonFileByteStream.cpp \
-        FaceDetection.cpp
+        ImageProcessor.cpp
 
 LOCAL_MODULE_TAGS := eng
 

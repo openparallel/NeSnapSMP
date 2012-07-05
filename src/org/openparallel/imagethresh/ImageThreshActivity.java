@@ -104,6 +104,7 @@ public class ImageThreshActivity extends Activity {
 	protected void onDestroy(){
 		super.onDestroy();
 		//cleanup after yourself by removing all those resources placed on the SD
+		/*
 		File directory = new File(Environment.getExternalStorageDirectory()+File.separator+"hatResources");
 		DeleteRecursive(directory);
 		
@@ -112,6 +113,7 @@ public class ImageThreshActivity extends Activity {
 		
 		directory = new File(Environment.getExternalStorageDirectory()+File.separator+"haarCascadeClassifiers");
 		DeleteRecursive(directory);
+		*/
 	}
 	
 	@Override
