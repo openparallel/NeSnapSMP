@@ -160,7 +160,7 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_doChainOfImageProcessingOp
 //    #ifdef USINGNEON
 //    
 //    #else
-    applySepiaTone(m_sourceImage);
+    //applySepiaTone(m_sourceImage);
 //    #endif
     
     processingFinished = true;
@@ -230,25 +230,51 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_doGrayscaleTransform(JNIEn
 float* getFloatImageFromIntArray(JNIEnv* env, jintArray array_data, 
                                  jint width, jint height){
     // Load Image
-	int *pixels = env->GetIntArrayElements(array_data, 0);
-    m_sourceImageNumberOfChannels = 3;
     
-    float * pixelsAsFloats= new float[sizeof(float)*width*height];
+    int *pixels = env->GetIntArrayElements(array_data, 0);
     
-    for (int y = 0; y < height; y++) {
+    float *pixelsImg = new float [width*height];
+    
+    for (int y = 0; y < height; y ++) {
         
-        int OrigX = 0;
-        for (int x = 0; x < width; x += m_sourceImageNumberOfChannels) {
-            pixelsAsFloats[(y*width) + OrigX] = (float)pixels[(y*width) + x];
-            OrigX++;
+        for (int x = 0; x < width; x++) {
+            pixelsImg[x+y*width] = (float)((char)pixels[x+y*width] & 0xFF);
+            //pixelsImg[x+y*width*3+1] = (float)(pixels[origX+y*width] >> 8 & 0xFF);
+            //pixelsImg[x+y*width*3+2] = (float)(pixels[origX+y*width] >> 16 & 0xFF);
         }
     }
+    
+    for (int i = 0; i < width; i ++) {
+        char buffer[32];
+        sprintf(buffer, "@ pixel no. %i -> %f", i, pixelsImg[i]);
+        LOGV((char*)buffer,false);
+    }
+	
+    
+    
+//    LOGV((char*)"checking source int pixels",false);
+    
+    
+    
+    
+//    float * pixelsAsFloats= new float[width*height];
+//
+//    for (int i = 0; i < width*height; i++) {
+//        pixelsAsFloats[i] = (float)pixels[i];
+//    }
+    
+//    for (int i = 0; i < width; i++) {
+//        for (int j = 0; j < height; j++) {
+//            pixelsAsFloats[(j*width) + i] = (float)pixels[(j*width) + i];
+//        }
+//    }
     
     //clean up the jni environment
     env->ReleaseIntArrayElements(array_data, pixels, 0);
     
-    return pixelsAsFloats;
+    return pixelsImg;
 }
+
 
 // Given an integer array of image data, load an IplImage.
 // It is the responsibility of the caller to release the IplImage.
@@ -282,17 +308,30 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_getSourceImage(JNIEnv* env
 {
 #ifdef USINGNEON
     
+    LOGV((char*)"getting image",false);
+    
     //convert the floats to int
-    
-    int * pixelsAsInts = new int[ sizeof(int)* m_sourceImageWidth * m_sourceImageHeight];
-    
     int width = m_sourceImageWidth;
     int height = m_sourceImageHeight;
     
-    for (int x = 0; x < height*width; x++) {
-            pixelsAsInts[x] = (int)m_sourceImage[x];
+    unsigned char * pixelsAsInts = new unsigned char[width * height];
+    
+    LOGV((char*)"can malloc width = %i, height = %i",m_sourceImageWidth,m_sourceImageHeight);
+    
+    for (int i = 0; i < width*height; i++) {
+        pixelsAsInts[i] = (int)m_sourceImage[i];
     }
     
+    LOGV((char*)"about to check arrays",false);
+    
+    char buffer[8];
+    sprintf(buffer, "%f", m_sourceImage[100]);
+    LOGV((char*)buffer,false);
+    
+    char nextbuffer[8];
+    sprintf(nextbuffer, "%i", pixelsAsInts[100]);
+    
+    LOGV((char*)nextbuffer,false);
     
     //WLNonFileByteStream *strm = new WLNonFileByteStream();
     //loadImageBytes((unsigned char*)pixelsAsInts, m_sourceImageWidth, m_sourceImageWidth,
@@ -310,14 +349,13 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_getSourceImage(JNIEnv* env
      env->SetBooleanArrayRegion(res_array, 0, imageSize, (jboolean*)strm->GetByte());
      */
     
-    jbyteArray res_array = env->NewByteArray(width*height);
+    jbyteArray res_array = env->NewByteArray(width * height);
     if (res_array == 0) {
         LOGE("Unable to allocate a new byte array for the source image.");
         return 0;
     }
-    env->SetByteArrayRegion(res_array, 0, width*height, (jbyte*)pixelsAsInts);
+    env->SetByteArrayRegion(res_array, 0, (width*height), (jbyte*)pixelsAsInts);
     
-	//strm->Close();
     
     delete(m_sourceImage);
 
@@ -389,11 +427,21 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_setSourceImage(JNIEnv* env
     
     //set a float array for every pixel in the image
     m_sourceImage = getFloatImageFromIntArray(env, photo_data, width, height);
-    
+
+    //m_sourceImage = getIntegerImageFromIntArray(env, photo_data, width, height);
+
     if (m_sourceImage == 0) {
 		LOGE("Error source image could not be created.");
 		return false;
 	}
+
+//    LOGV((char*)"checking source image array",false);
+//    
+//    char buffer[8];
+//    sprintf(buffer, "@ pixel no. %i -> %f", 100, m_sourceImage[100]);
+//    LOGV((char*)buffer,false);
+    
+    return true;
     
 #else
         
