@@ -15,6 +15,7 @@
 #include <string.h>
 #include <time.h>
 
+
 #ifndef ANDROID
 
 #include <opencv/cv.h>
@@ -72,6 +73,17 @@ IplImage *m_sourceImage = 0;
 #ifdef __cplusplus
 extern "C" {
 #endif
+    
+    JNIEXPORT
+    jboolean
+    JNICALL
+    Java_org_openparallel_imagethresh_ImageThreshActivity_applyFunhouseEffect(JNIEnv* env,
+                                                                                      jobject thiz);
+    
+    JNIEXPORT
+    jboolean
+    JNICALL
+    Java_org_openparallel_imagethresh_ImageThreshActivity_applySketchbookEffect(JNIEnv* env, jobject thiz);
     
     JNIEXPORT
     void 
