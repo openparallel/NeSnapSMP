@@ -38,8 +38,13 @@
 #include "grfmt_bmp.h"
 
 //neon & Ne10 libraries
-#include "inc/NE10_c.h"
-#include "inc/NE10_types.h"
+#ifdef USINGNEON
+    #include "inc/NE10_c.h"
+    #include "inc/NE10_types.h"
+    #include "inc/NE10_asm.h"
+    #include "inc/NE10_neon.h"
+    #include "inc/NE10.h"
+#endif
 
 #define LOGV(...) __android_log_print(ANDROID_LOG_SILENT, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
@@ -59,14 +64,8 @@
 // CV Objects
 static const char* fmtSignBmp = "BM";
 
-#ifdef USINGNEON
-    float *m_sourceImage;
-    int m_sourceImageWidth;
-    int m_sourceImageHeight;
-    int m_sourceImageNumberOfChannels;
-#else
-    IplImage *m_sourceImage = 0;
-#endif
+IplImage *m_sourceImage = 0;
+
 
 
 
@@ -335,11 +334,8 @@ void Log(char* message, bool errorFlag);
  * Public functions
  */
 
-#ifdef USINGNEON
-void applySepiaTone(float* target);
-#else
+
 void applySepiaTone(IplImage* target);
-#endif
 
 
 #endif

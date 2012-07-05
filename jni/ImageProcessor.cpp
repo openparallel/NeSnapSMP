@@ -57,11 +57,7 @@ void Log(char* message, bool errorFlag){
     return;
 }
 
-#ifdef USINGNEON
-void applySepiaTone(float* target){
-    
-}
-#else
+
 void applySepiaTone(IplImage* target){
     for (int ix=0; ix<target->width; ix++) {
         for (int iy=0; iy<target->height; iy++) {
@@ -83,7 +79,6 @@ void applySepiaTone(IplImage* target){
         }
     }
 }
-#endif
 
 void overlayImage(IplImage* target, IplImage* source, int x, int y) {
     
@@ -157,11 +152,7 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_doChainOfImageProcessingOp
                                                                                         jobject thiz){
     processingFinished = false;
     
-//    #ifdef USINGNEON
-//    
-//    #else
-    //applySepiaTone(m_sourceImage);
-//    #endif
+    applySepiaTone(m_sourceImage);
     
     processingFinished = true;
     return true;
@@ -187,9 +178,7 @@ void
 JNICALL
 Java_org_openparallel_imagethresh_ImageThreshActivity_doGrayscaleTransform(JNIEnv* env,
                                                                            jobject thiz){
-#ifdef USINGNEON
-    
-#else
+
     IplImage* r = cvCreateImage( cvGetSize(m_sourceImage), IPL_DEPTH_8U, 1 ); 
     IplImage* g = cvCreateImage( cvGetSize(m_sourceImage), IPL_DEPTH_8U, 1 ); 
     IplImage* b = cvCreateImage( cvGetSize(m_sourceImage), IPL_DEPTH_8U, 1 );
@@ -222,7 +211,6 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_doGrayscaleTransform(JNIEn
     cvReleaseImage(&s);
     
     return;
-#endif
 }
 
 // Given an integer array of image data, load a float array.
@@ -306,62 +294,6 @@ JNICALL
 Java_org_openparallel_imagethresh_ImageThreshActivity_getSourceImage(JNIEnv* env,
                                                                      jobject thiz)
 {
-#ifdef USINGNEON
-    
-    LOGV((char*)"getting image",false);
-    
-    //convert the floats to int
-    int width = m_sourceImageWidth;
-    int height = m_sourceImageHeight;
-    
-    unsigned char * pixelsAsInts = new unsigned char[width * height];
-    
-    LOGV((char*)"can malloc width = %i, height = %i",m_sourceImageWidth,m_sourceImageHeight);
-    
-    for (int i = 0; i < width*height; i++) {
-        pixelsAsInts[i] = (int)m_sourceImage[i];
-    }
-    
-    LOGV((char*)"about to check arrays",false);
-    
-    char buffer[8];
-    sprintf(buffer, "%f", m_sourceImage[100]);
-    LOGV((char*)buffer,false);
-    
-    char nextbuffer[8];
-    sprintf(nextbuffer, "%i", pixelsAsInts[100]);
-    
-    LOGV((char*)nextbuffer,false);
-    
-    //WLNonFileByteStream *strm = new WLNonFileByteStream();
-    //loadImageBytes((unsigned char*)pixelsAsInts, m_sourceImageWidth, m_sourceImageWidth,
-    //               m_sourceImageHeight, 8, 1, strm);
-	
-	//int imageSize = strm->GetSize();
-    
-    //if you wanted to return an array of 1's and 0's ()
-    /*
-     jbooleanArray res_array = env->NewBooleanArray(imageSize);
-     if (res_array == 0) {
-     LOGE("Unable to allocate a new boolean array for the source image.");
-     return 0;
-     }
-     env->SetBooleanArrayRegion(res_array, 0, imageSize, (jboolean*)strm->GetByte());
-     */
-    
-    jbyteArray res_array = env->NewByteArray(width * height);
-    if (res_array == 0) {
-        LOGE("Unable to allocate a new byte array for the source image.");
-        return 0;
-    }
-    env->SetByteArrayRegion(res_array, 0, (width*height), (jbyte*)pixelsAsInts);
-    
-    
-    delete(m_sourceImage);
-
-    return res_array;
-    
-#else
     
 	if (m_sourceImage == 0) {
 		LOGE("Error source image was not set.");
@@ -400,8 +332,6 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_getSourceImage(JNIEnv* env
 	//SAFE_DELETE(strm);
 	
 	return res_array;
-
-#endif
     
 }
 
@@ -415,35 +345,6 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_setSourceImage(JNIEnv* env
                                                                      jint width,
                                                                      jint height)
 {	
-#ifdef USINGNEON
-    // Release the image if it hasn't already been released.
-    if (m_sourceImage) {
-        delete(m_sourceImage);
-        m_sourceImage = 0;
-    }
-    
-    m_sourceImageWidth = width;
-    m_sourceImageHeight = height;
-    
-    //set a float array for every pixel in the image
-    m_sourceImage = getFloatImageFromIntArray(env, photo_data, width, height);
-
-    //m_sourceImage = getIntegerImageFromIntArray(env, photo_data, width, height);
-
-    if (m_sourceImage == 0) {
-		LOGE("Error source image could not be created.");
-		return false;
-	}
-
-//    LOGV((char*)"checking source image array",false);
-//    
-//    char buffer[8];
-//    sprintf(buffer, "@ pixel no. %i -> %f", 100, m_sourceImage[100]);
-//    LOGV((char*)buffer,false);
-    
-    return true;
-    
-#else
         
 	// Release the image if it hasn't already been released.
 	if (m_sourceImage) {
@@ -470,17 +371,12 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_imageProcessingHasFinished
     return processingFinished;
 }
 
+
 JNIEXPORT jstring JNICALL
 Java_org_openparallel_imagethresh_ImageThreshActivity_stringFromJNI(JNIEnv* env, jobject thiz){
     
     
-#ifndef USINGNEON
-    
-    return env->NewStringUTF("Hello from JNI! (NEON & Ne10 was not used :( )");
-    
-#else
-    
-    
+    #ifdef USINGNEON
     //do a little bit of simple float arithmetric (vector by scalar)
     //if it runs, and computes the correct result... we know it works!
     
@@ -498,11 +394,12 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_stringFromJNI(JNIEnv* env,
     delete(dest);
     
     return env->NewStringUTF("Hello from JNI! (but... neon can't compute floats :( )");
+    #else
+    return env->NewStringUTF("Hello from JNI! (but... neon isn't being used )");
+    #endif
     
-#endif
 }
 
-#endif
 
 /*
  * End of android specific stuff

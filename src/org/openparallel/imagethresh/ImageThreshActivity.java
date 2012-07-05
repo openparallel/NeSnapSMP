@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import org.openparallel.imagethresh.R;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentValues;
@@ -27,6 +28,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.hardware.Camera;
 
+@SuppressLint("ParserError")
 public class ImageThreshActivity extends Activity {
 	/** Called when the activity is first created. */
 
@@ -265,19 +267,58 @@ public class ImageThreshActivity extends Activity {
 							
 							//process the data
 							//this.doGrayscaleTransform();
-							
-							//maybe check that this.LoadHaarWaveletFiltersToLocalStorage(); still has local haar cascades... if not maybe run it again?
-							
-							boolean didDoChainOfImageProcessingOperations = this.doChainOfImageProcessingOperations();
-							
-							//if the NDK hasn't finished why should you progress?
-							while (!this.imageProcessingHasFinished()){
-								wait(100);
+							float [] runtimes = new float[100];
+							for (int i = 0; i < 100; i++){
+								this.setSourceImage(data, w, h);
+								float startnow = android.os.SystemClock.uptimeMillis();
+								
+								
+								boolean didDoChainOfImageProcessingOperations = this.doChainOfImageProcessingOperations();
+								
+								float endnow = android.os.SystemClock.uptimeMillis();
+								Log.d("MYTAG", "Excution time: "+(endnow-startnow)+" ms");
+								runtimes[i] = endnow-startnow;
+								
+								
+								//if the NDK hasn't finished why should you progress?
+								while (!this.imageProcessingHasFinished()){
+									wait(100);
+								}
+								
+								if (!didDoChainOfImageProcessingOperations){
+									Log.e("Captain's Log", "Applying the chain of Image Processing Operations Failed");
+								}
 							}
 							
-							if (!didDoChainOfImageProcessingOperations){
-								Log.e("Captain's Log", "Applying the chain of Image Processing Operations Failed");
-							}
+							String file = "/runtimes.txt";
+							
+							//write it to file
+							try {
+								
+					            File root = Environment.getExternalStorageDirectory();
+
+					            String localFilePath = root.getPath() + file;
+
+					           
+
+					            FileOutputStream fos = new FileOutputStream(localFilePath, false);
+
+					            fos.write("Run\tMethod\tMilliseconds\n".getBytes());
+					            
+					            for(int i = 0; i < 100; i++){
+					            	fos.write(((i+1)+"\t"+ 2 +"\t"+ runtimes[i] +"\n").getBytes());
+					            }
+
+					            fos.close();
+
+					    } catch (Exception e) {
+
+					            e.printStackTrace();
+
+					    }
+							
+							
+							
 							
 							
 							
