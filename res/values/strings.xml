@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Ne10BoostedImageThresh</string>
-   	<string name="main_text_view_string">Click the button below to take a picture</string>
-	<string name="camera_button_text">Take Photo!</string>
+    <string name="app_name">NeSnap</string>
+   	<string name="main_text_view_string">Please select an effect below...</string>
+	<string name="fun_house_text">Fun House</string>
+	<string name="sketch_book_text">Sketch Book</string>
+	<string name="sepia_tone_text">Sepia Tone</string>
+	<string name="save_text">Save It!</string>
+	<string name="neonise_text">Neonise</string>
 	
 </resources>

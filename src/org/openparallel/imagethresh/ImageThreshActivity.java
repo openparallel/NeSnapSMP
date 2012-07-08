@@ -4,7 +4,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+
 import org.openparallel.imagethresh.R;
+import org.openparallel.imagethresh.R.id;
 
 import android.R.bool;
 import android.annotation.SuppressLint;
@@ -18,10 +21,13 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.MediaStore.Images;
+import android.provider.MediaStore.Images.Media;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -39,6 +45,7 @@ public class ImageThreshActivity extends Activity {
 
 	//OpenCV JNI functions
 	//public native byte[] findContours(int[] data, int w, int h);
+	public native boolean applyNeonising();
 	public native boolean applyFunhouseEffect();
 	public native boolean applySketchbookEffect();
 	public native byte[] getSourceImage();
@@ -65,7 +72,7 @@ public class ImageThreshActivity extends Activity {
 	private int frontCameraPhotoWidth = 10000;
 	private int frontCameraPhotoHeight = 10000;
 
-
+	private int effectNo = 0;
 
 	/* Override the onCreate method */
 	@Override
@@ -80,10 +87,20 @@ public class ImageThreshActivity extends Activity {
 
 
 		//rig up a camera button to collect images and to run the bulk of the app when a good photo is taken
-		final Button cameraButton = (Button)findViewById(R.id.camera_button); // Get a handle to the button so we can add a handler for the click event 
-		cameraButton.setOnClickListener(new OnClickListener() {
+		final Button sepiaToneButton = (Button)findViewById(R.id.sepia_tone_button); // Get a handle to the button so we can add a handler for the click event 
+		final Button sketchBookButton = (Button)findViewById(R.id.sketch_book_button); // Get a handle to the button so we can add a handler for the click event 
+		final Button funHouseButton = (Button)findViewById(R.id.fun_house_button); // Get a handle to the button so we can add a handler for the click event 
+		final Button neoniseButton = (Button)findViewById(id.neonise_button);
+
+		imageView = (ImageView)findViewById(id.imageView1);
+
+		final Button saveButton = (Button)findViewById(id.save_button);
+
+		sepiaToneButton.setOnClickListener(new OnClickListener() {
+
 			@Override
 			public void onClick(View v){
+				effectNo = 1;
 
 				Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE); // Normally you would populate this with your custom intent.
 
@@ -99,6 +116,104 @@ public class ImageThreshActivity extends Activity {
 
 			}
 		});
+
+		sketchBookButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v){
+				effectNo = 2;
+
+				Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE); // Normally you would populate this with your custom intent.
+
+				ContentValues values = new ContentValues();
+				values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+				imageUri = getContentResolver().insert(
+						MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+
+				cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+
+				startActivityForResult(cameraIntent, PICTURE_ACTIVITY); // This will cause the onActivityResult event to fire once it's done
+
+			}
+		});
+
+		funHouseButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v){
+				effectNo = 3;
+
+				Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE); // Normally you would populate this with your custom intent.
+
+				ContentValues values = new ContentValues();
+				values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+				imageUri = getContentResolver().insert(
+						MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+
+				cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+
+				startActivityForResult(cameraIntent, PICTURE_ACTIVITY); // This will cause the onActivityResult event to fire once it's done
+
+			}
+		});
+
+		neoniseButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v){
+				effectNo = 4;
+
+				Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE); // Normally you would populate this with your custom intent.
+
+				ContentValues values = new ContentValues();
+				values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+				imageUri = getContentResolver().insert(
+						MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+
+				cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+
+				startActivityForResult(cameraIntent, PICTURE_ACTIVITY); // This will cause the onActivityResult event to fire once it's done
+				
+			}
+		});
+
+		saveButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				AlertDialog msgDialog;
+				
+				final ImageView imageView = (ImageView)findViewById(id.imageView1);
+				final BitmapDrawable bitmapDrawable = (BitmapDrawable) imageView.getDrawable();
+	            Bitmap x = bitmapDrawable.getBitmap();
+				
+				ContentValues values = new ContentValues();
+				//values.put(Images.Media.TITLE, "title");
+				//values.put(Images.Media.BUCKET_ID, "NeSnap");
+				//values.put(Images.Media.DESCRIPTION, "NeSnap pictures saved");
+				values.put(Images.Media.MIME_TYPE, "image/png");
+				Uri uri = getContentResolver().insert(Media.EXTERNAL_CONTENT_URI, values);
+				Log.i("Captain's Log", "Uri to save ->" + uri);
+				OutputStream outstream;
+				try {
+					outstream = getContentResolver().openOutputStream(uri);
+
+					x.compress(Bitmap.CompressFormat.JPEG, 100, outstream);
+					outstream.close();
+					msgDialog = createAlertDialog(":)", "The image was saved to " + uri, "OK!");
+				} catch (Exception e) {
+					msgDialog = createAlertDialog(":(", "The image couldn't be saved...", "OK!");
+					Log.i("Captain's Log", "Problem saving image");
+					//
+				}
+				
+				msgDialog.show();
+			}
+		});
+
 
 		String s = stringFromJNI();
 		Log.d("Captain's Log", s);
@@ -267,7 +382,7 @@ public class ImageThreshActivity extends Activity {
 					Log.i("Captain's Log", "Image Passed into the NDK");
 
 					if(didSet){
-						boolean benchmarking = true;
+						boolean benchmarking = false;
 						if(benchmarking){
 							//process the data
 							//this.doGrayscaleTransform();
@@ -276,16 +391,27 @@ public class ImageThreshActivity extends Activity {
 								this.setSourceImage(data, w, h);
 								float startnow = android.os.SystemClock.uptimeMillis();
 
+								boolean didDoChainOfImageProcessingOperations = false;
 
-								//sepia toning
-								//boolean didDoChainOfImageProcessingOperations = this.doChainOfImageProcessingOperations();
+								switch(effectNo){
+								case 1:
+									//sepia toning
+									didDoChainOfImageProcessingOperations = this.doChainOfImageProcessingOperations();
+									break;
+								case 2:
+									//apply sketchbook effect
+									didDoChainOfImageProcessingOperations = this.applySketchbookEffect();
+									break;
+								case 3:
+									//apply funhouse effect
+									didDoChainOfImageProcessingOperations = this.applyFunhouseEffect();
+									break;
+								case 4:
+									//apply neonising effect
+									didDoChainOfImageProcessingOperations = this.applyNeonising();
+									break;
+								}
 
-								//apply sketchbook effect
-								//boolean didDoChainOfImageProcessingOperations = this.applySketchbookEffect();
-								
-								//apply funhouse effect
-								boolean didDoChainOfImageProcessingOperations = this.applyFunhouseEffect();
-								
 								float endnow = android.os.SystemClock.uptimeMillis();
 								Log.d("MYTAG", "Excution time: "+(endnow-startnow)+" ms");
 								runtimes[i] = endnow-startnow;
@@ -332,17 +458,29 @@ public class ImageThreshActivity extends Activity {
 							//we don't need 100 iterations of the same thing, so we test it once
 							float startnow = android.os.SystemClock.uptimeMillis();
 
-							//sepia toning
-							//boolean didDoChainOfImageProcessingOperations = this.doChainOfImageProcessingOperations();
+							boolean didDoChainOfImageProcessingOperations = false;
 
-							//apply sketchbook effect
-							//boolean didDoChainOfImageProcessingOperations = this.applySketchbookEffect();
-							
-							//apply funhouse effect
-							boolean didDoChainOfImageProcessingOperations = this.applyFunhouseEffect();
-							
+							switch(effectNo){
+							case 1:
+								//sepia toning
+								didDoChainOfImageProcessingOperations = this.doChainOfImageProcessingOperations();
+								break;
+							case 2:
+								//apply sketchbook effect
+								didDoChainOfImageProcessingOperations = this.applySketchbookEffect();
+								break;
+							case 3:
+								//apply funhouse effect
+								didDoChainOfImageProcessingOperations = this.applyFunhouseEffect();
+								break;
+							case 4:
+								//apply neonising effect
+								didDoChainOfImageProcessingOperations = this.applyNeonising();
+								break;
+							}
+
 							float endnow = android.os.SystemClock.uptimeMillis();
-							Log.d("MYTAG", "Excution time: "+(endnow-startnow)+" ms");
+							Log.d("MYTAG", "Execution time: "+(endnow-startnow)+" ms");
 
 
 							//if the NDK hasn't finished why should you progress?

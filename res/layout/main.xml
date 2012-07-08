@@ -4,24 +4,72 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
-	<TextView  
-	android:id="@+id/main_text_view"
-    android:layout_width="fill_parent" 
-    android:layout_height="wrap_content" 
-    android:text="@string/main_text_view_string"
-	android:textSize="@dimen/big_text"
-    />
+    <!-- -->
+		<TextView  
+		android:id="@+id/main_text_view"
+	    android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content" 
+	    android:text="@string/main_text_view_string"
+		android:textSize="@dimen/mid_text"
+	    />
+	
 
-	<Button
-	android:id="@+id/camera_button"
-	android:layout_width="fill_parent"
-	android:layout_height="wrap_content"
-	android:text="@string/camera_button_text" 
-	android:textSize="@dimen/big_text"/>
+	<RelativeLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+    
+		<Button
+		android:id="@+id/fun_house_button"
+		android:layout_alignParentLeft="true"
+		android:layout_width="180dp"
+		android:layout_height="wrap_content"
+		android:text="@string/fun_house_text" 
+		android:textSize="@dimen/mid_text"/>
+		
+		<Button
+		android:id="@+id/sketch_book_button"
+		android:layout_alignParentRight="true"
+		android:layout_width="180dp"
+		android:layout_height="wrap_content"
+		android:text="@string/sketch_book_text" 
+		android:textSize="@dimen/mid_text"/>
+	
+	</RelativeLayout>
+	
+	<RelativeLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+		
+		<Button
+		android:id="@+id/sepia_tone_button"
+		android:layout_alignParentLeft="true"
+		android:layout_width="180dp"
+		android:layout_height="wrap_content"
+		android:text="@string/sepia_tone_text" 
+		android:textSize="@dimen/mid_text"/>
+		
+		<Button
+		android:id="@+id/neonise_button"
+		android:layout_alignParentRight="true"
+		android:layout_width="180dp"
+		android:layout_height="wrap_content"
+		android:text="@string/neonise_text" 
+		android:textSize="@dimen/mid_text"/>
+	
+	</RelativeLayout>
 	
 	<ImageView android:id="@+id/imageView1" 
-	    android:layout_height="fill_parent" 
+	    android:layout_height="390dp" 
 	    android:src="@drawable/ic_launcher" 
 	    android:layout_width="fill_parent"/>
+	
+	<Button
+	android:id="@+id/save_button"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:text="@string/save_text" 
+	android:textSize="@dimen/mid_text"/>
 	
 </LinearLayout>

@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 OpenParallel.com all rights reserved.
 //
 
-#define USINGNEON
+//#define USINGNEON
 
 #ifndef FaceIt_FaceDetection_h
 #define FaceIt_FaceDetection_h
@@ -84,6 +84,13 @@ extern "C" {
     jboolean
     JNICALL
     Java_org_openparallel_imagethresh_ImageThreshActivity_applySketchbookEffect(JNIEnv* env, jobject thiz);
+    
+    
+    JNIEXPORT
+    jboolean
+    JNICALL
+    Java_org_openparallel_imagethresh_ImageThreshActivity_applyNeonising(JNIEnv* env,
+                                                                                               jobject thiz);
     
     JNIEXPORT
     void 

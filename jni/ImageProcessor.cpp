@@ -296,6 +296,187 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_applySketchbookEffect(JNIE
     return processingFinished;
 }
 
+
+JNIEXPORT
+jboolean
+JNICALL
+Java_org_openparallel_imagethresh_ImageThreshActivity_applyNeonising(JNIEnv* env,
+                                                                            jobject thiz){
+    
+    processingFinished = false;
+    
+    
+    IplImage* sourceGrey = cvCreateImage(cvGetSize(m_sourceImage), IPL_DEPTH_8U, 1);
+    IplImage* sobelised = cvCreateImage(cvGetSize(m_sourceImage), IPL_DEPTH_8U, 1);
+    IplImage* threshed = cvCreateImage(cvGetSize(m_sourceImage), IPL_DEPTH_8U, 1);
+    IplImage* equalised = cvCreateImage(cvGetSize(m_sourceImage), IPL_DEPTH_8U, 1);
+    
+    cvCvtColor(m_sourceImage, sourceGrey, CV_BGR2GRAY);
+    
+    cvReleaseImage(&m_sourceImage);
+//    //get grayscale
+//    IplImage* r = cvCreateImage( cvGetSize(source), IPL_DEPTH_8U, 1 ); 
+//    IplImage* g = cvCreateImage( cvGetSize(source), IPL_DEPTH_8U, 1 ); 
+//    IplImage* b = cvCreateImage( cvGetSize(source), IPL_DEPTH_8U, 1 );
+//    
+//    
+//    // Split image onto the color planes. 
+//    cvSplit( source, b, g, r, NULL );
+//    
+//    cvAddWeighted( r, 1./3., g, 1./3., 0.0, sourceGrey ); 
+//    cvAddWeighted( sourceGrey, 2./3., b, 1./3., 0.0, sourceGrey );
+//    
+//    cvReleaseImage(&r);
+//    cvReleaseImage(&b);
+//    cvReleaseImage(&g);
+    
+    //sobel filter
+    cvSobel(sourceGrey, sobelised, 1, 1, 3);
+    
+    //now we have greyscale time for thesholding
+    cvThreshold(sobelised, threshed, 64, 255, CV_THRESH_TOZERO);
+    
+    cvEqualizeHist(threshed, equalised);
+    
+    CvMemStorage* contour_storage = cvCreateMemStorage(0);
+    CvSeq* contours = NULL;
+        
+    m_sourceImage = cvCreateImage(cvGetSize(sourceGrey), 8, 3);
+    cvMerge(sourceGrey, sourceGrey, sourceGrey, NULL, m_sourceImage);
+    
+    int numContours = cvFindContours( equalised , contour_storage, &contours, sizeof(CvContour),
+                                     CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, cvPoint(0,0) );
+    
+    //list of Neon Light Colours 
+    //
+    //rgb       %   %   %
+    //---------------------
+    //turquise  0   255 255
+    //lemon     255 255 0
+    //spring    0   255 0
+    //magenta   255 0   255
+    //lime      128 255 0
+    //tangerine 255 128 0
+    
+    srand(time(NULL)); 
+    
+    int insChoice = rand()%5;
+    int outsChoice = rand()%5;
+    
+    CvScalar ins;
+    CvScalar outs;
+    
+    switch (insChoice) {
+        case 0:
+            ins = CV_RGB(0,255,255);
+            break;
+        case 1:
+            ins = CV_RGB(255,255,0);
+            break;
+        case 2:
+            ins = CV_RGB(0,255,0);
+            break;
+        case 3:
+            ins = CV_RGB(255,0,255);
+            break;
+        case 4:
+            ins = CV_RGB(128,255,0);
+            break;
+        case 5:
+            ins = CV_RGB(255,128,0);
+            break;
+        default:
+            break;
+    }
+    
+    switch (outsChoice) {
+        case 0:
+            outs = CV_RGB(0,255,255);
+            break;
+        case 1:
+            outs = CV_RGB(255,255,0);
+            break;
+        case 2:
+            outs = CV_RGB(0,255,0);
+            break;
+        case 3:
+            outs = CV_RGB(255,0,255);
+            break;
+        case 4:
+            outs = CV_RGB(128,255,0);
+            break;
+        case 5:
+            outs = CV_RGB(255,128,0);
+            break;
+        default:
+            break;
+    }
+    
+    for( CvSeq* c = contours; c != NULL; c = c->h_next ){
+        cvDrawContours(m_sourceImage, c, ins, outs, 1, 25, 8);
+    }
+    
+    cvReleaseMemStorage(&contour_storage);
+    cvReleaseImage(&sourceGrey);
+    cvReleaseImage(&sobelised);
+    cvReleaseImage(&threshed);
+    cvReleaseImage(&equalised);
+    /*
+     
+     CvSeq* first_contour = NULL;
+     
+     int Nc = cvFindContours(
+     img_edge,
+     storage,
+     &first_contour,
+     sizeof(CvContour),
+     CV_RETR_LIST );
+     
+     int n=0;
+     printf( "Total Contours Detected: %d\n", Nc );
+     CvScalar red = CV_RGB(250,0,0);
+     CvScalar blue = CV_RGB(0,0,250);
+     
+     for( CvSeq* c=first_contour; c!=NULL; c=c->h_next ){
+     cvCvtColor( img_8uc1, img_8uc3, CV_GRAY2BGR );
+     cvDrawContours(
+     img_8uc3,
+     c,
+     red,		// Red
+     blue,		// Blue
+     1,			// Vary max_level and compare results
+     2,
+     8 );
+     printf( "Contour #%dn", n );
+     cvShowImage( "Contours 2", img_8uc3 );
+     printf( " %d elements:\n", c->total );
+     for( int i=0; itotal; ++i ){
+     CvPoint* p = CV_GET_SEQ_ELEM( CvPoint, c, i );
+     printf(" (%d,%d)\n", p->x, p->y );
+     }
+     cvWaitKey();
+     n++;
+     }
+
+     
+     */
+    
+    //IplImage* convolved = cvCreateImage(cvGetSize(opImage), IPL_DEPTH_8U, 3);
+        
+    //m_sourceImage = cvCloneImage(source);
+    //m_sourceImage = cvCreateImage(cvGetSize(opImage), IPL_DEPTH_8U, 3);
+    //cvConvertScaleAbs(result, m_sourceImage, 1,0);
+    //cvReleaseImage(&source);
+    //cvReleaseImage(&convolved);
+    //cvReleaseImage(&opImage);
+    
+    processingFinished = true;
+    
+    return processingFinished;
+}
+
+
+
 JNIEXPORT
 void 
 JNICALL
