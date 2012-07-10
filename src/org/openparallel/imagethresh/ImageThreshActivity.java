@@ -382,7 +382,7 @@ public class ImageThreshActivity extends Activity {
 					Log.i("Captain's Log", "Image Passed into the NDK");
 
 					if(didSet){
-						boolean benchmarking = false;
+						boolean benchmarking = true;
 						if(benchmarking){
 							//process the data
 							//this.doGrayscaleTransform();

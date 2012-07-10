@@ -330,22 +330,178 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_applyNeonising(JNIEnv* env
 //    cvReleaseImage(&b);
 //    cvReleaseImage(&g);
     
-    //sobel filter
-    cvSobel(sourceGrey, sobelised, 1, 1, 3);
     
-    //now we have greyscale time for thesholding
-    cvThreshold(sobelised, threshed, 64, 255, CV_THRESH_TOZERO);
+
+    //equalise histogram
+    cvEqualizeHist(sourceGrey, equalised);
     
-    cvEqualizeHist(threshed, equalised);
+    double minVal, maxVal;
+    cvMinMaxLoc(equalised, &minVal, &maxVal, NULL, NULL, NULL); //find minimum and maximum intensities
     
-    CvMemStorage* contour_storage = cvCreateMemStorage(0);
-    CvSeq* contours = NULL;
-        
     m_sourceImage = cvCreateImage(cvGetSize(sourceGrey), 8, 3);
     cvMerge(sourceGrey, sourceGrey, sourceGrey, NULL, m_sourceImage);
     
-    int numContours = cvFindContours( equalised , contour_storage, &contours, sizeof(CvContour),
-                                     CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, cvPoint(0,0) );
+#ifdef EighteesStyle
+    int stepSize = 0;
+    //int stepSize = 2;
+    
+    for (int j=0; j < 10; j+=stepSize) {
+    
+        cvThreshold(equalised, threshed, (maxVal*(j*0.1)), (maxVal*((j+stepSize)*0.1)), CV_THRESH_BINARY);
+            
+        //apply neon ;)
+        CvMemStorage* contour_storage = cvCreateMemStorage(0);
+        CvSeq* contours = NULL;
+        
+        int numContours = cvFindContours(threshed, contour_storage, &contours, sizeof(CvContour),
+                                         CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, cvPoint(0,0));
+        
+        //if no contours were found return early
+        if(numContours  < 1){
+            processingFinished = true;
+            
+            return processingFinished;
+        }
+        
+        //list of Neon Light Colours 
+        //
+        //rgb       %   %   %
+        //---------------------
+        //turquise  0   255 255
+        //lemon     255 255 0
+        //spring    0   255 0
+        //magenta   255 0   255
+        //lime      128 255 0
+        //tangerine 255 128 0
+        
+        
+        
+        int insChoice = rand()%5;
+        int outsChoice = rand()%5;
+        
+        CvScalar ins;
+        CvScalar outs;
+        
+        switch (insChoice) {
+            case 0:
+                ins = CV_RGB(0,255,255);
+                break;
+            case 1:
+                ins = CV_RGB(255,255,0);
+                break;
+            case 2:
+                ins = CV_RGB(0,255,0);
+                break;
+            case 3:
+                ins = CV_RGB(255,0,255);
+                break;
+            case 4:
+                ins = CV_RGB(128,255,0);
+                break;
+            case 5:
+                ins = CV_RGB(255,128,0);
+                break;
+            default:
+                break;
+        }
+        
+        switch (outsChoice) {
+            case 0:
+                outs = CV_RGB(0,255,255);
+                break;
+            case 1:
+                outs = CV_RGB(255,255,0);
+                break;
+            case 2:
+                outs = CV_RGB(0,255,0);
+                break;
+            case 3:
+                outs = CV_RGB(255,0,255);
+                break;
+            case 4:
+                outs = CV_RGB(128,255,0);
+                break;
+            case 5:
+                outs = CV_RGB(255,128,0);
+                break;
+            default:
+                break;
+        }
+        
+        for( CvSeq* c = contours; c != NULL; c = c->h_next ){
+            cvDrawContours(m_sourceImage, c, ins, outs, 1, 25, 8);
+        }
+        
+        cvReleaseMemStorage(&contour_storage);
+        
+    }
+    
+#else
+    
+    
+     
+     //LOGE("Maxval is -> %f", maxVal);
+     
+     //now we have time for binary thesholding
+     //cvAdaptiveThreshold(equalised,threshed,maxVal,CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_TRUNC, 50);
+     
+     //get the top 40%
+     cvThreshold(equalised, threshed, (maxVal*0.6), (maxVal*1.0), CV_THRESH_BINARY);
+     
+     //perform an Closing morphology operation
+     IplConvKernel* ellipse = cvCreateStructuringElementEx(5,5,0,0,CV_SHAPE_ELLIPSE,NULL);
+     
+     
+     cvMorphologyEx(threshed, threshed, NULL, ellipse, CV_MOP_CLOSE, 1);
+     cvMorphologyEx(threshed, threshed, NULL, ellipse, CV_MOP_CLOSE, 1);
+     cvMorphologyEx(threshed, threshed, NULL, ellipse, CV_MOP_CLOSE, 1);
+     
+     //    cvErode(threshed,threshed, ellipse,1);
+     //    cvDilate(threshed,threshed, ellipse,1);
+     
+     for (int i = 0; i < 3; i++) {
+         cvSmooth(threshed, threshed, CV_GAUSSIAN,3,3);
+         cvThreshold(threshed, threshed, 1, 255, CV_THRESH_BINARY);
+     }
+     
+     //    
+     //    cvMorphologyEx(threshed, threshed, NULL, ellipse, CV_MOP_CLOSE, 1);
+     //    cvMorphologyEx(threshed, threshed, NULL, ellipse, CV_MOP_CLOSE, 1);
+     //    cvMorphologyEx(threshed, threshed, NULL, ellipse, CV_MOP_CLOSE, 1);
+     //    
+     
+     //cvDilate(threshed,threshed, ellipse,5);
+     
+     //cvMorphologyEx(threshed, threshed, NULL, ellipse, CV_MOP_OPEN, 4);
+     //    int numberOfMorphs = 4;
+     
+     //    for (int i = 0; i < numberOfMorphs; i++) {
+     //for every 1 closing operation do 2 iterations of opening (really remove all fine features)
+     //        cvMorphologyEx(threshed, threshed, NULL, ellipse, CV_MOP_CLOSE, 4);
+     
+     //cvMorphologyEx(threshed, threshed, NULL, ellipse, CV_MOP_OPEN, 1);
+     //    }
+     
+    
+    //    m_sourceImage = cvCloneImage(threshed);
+    //    processingFinished = true;
+    //    return processingFinished;
+    //    /*
+    
+    
+    //apply neon ;)
+    CvMemStorage* contour_storage = cvCreateMemStorage(0);
+    CvSeq* contours = NULL;
+    
+    int numContours = cvFindContours(threshed, contour_storage, &contours, sizeof(CvContour),
+                                     CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, cvPoint(0,0));
+    
+    //if no contours were found return early
+    if(numContours  < 1){
+        processingFinished = true;
+        
+        return processingFinished;
+    }
     
     //list of Neon Light Colours 
     //
@@ -358,7 +514,7 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_applyNeonising(JNIEnv* env
     //lime      128 255 0
     //tangerine 255 128 0
     
-    srand(time(NULL)); 
+    
     
     int insChoice = rand()%5;
     int outsChoice = rand()%5;
@@ -417,10 +573,14 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_applyNeonising(JNIEnv* env
     }
     
     cvReleaseMemStorage(&contour_storage);
+    
+#endif
+    
     cvReleaseImage(&sourceGrey);
     cvReleaseImage(&sobelised);
     cvReleaseImage(&threshed);
     cvReleaseImage(&equalised);
+    
     /*
      
      CvSeq* first_contour = NULL;
@@ -692,7 +852,8 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_imageProcessingHasFinished
 
 JNIEXPORT jstring JNICALL
 Java_org_openparallel_imagethresh_ImageThreshActivity_stringFromJNI(JNIEnv* env, jobject thiz){
-    
+    //initialise the random seed for neonise functions (used to pick NEON colours)
+    srand(time(NULL)); 
     
     #ifdef USINGNEON
     //do a little bit of simple float arithmetric (vector by scalar)

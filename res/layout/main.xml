@@ -62,7 +62,7 @@
 	
 	<ImageView android:id="@+id/imageView1" 
 	    android:layout_height="390dp" 
-	    android:src="@drawable/ic_launcher" 
+	    android:src="@raw/mainsplash" 
 	    android:layout_width="fill_parent"/>
 	
 	<Button

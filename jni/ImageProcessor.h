@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 OpenParallel.com all rights reserved.
 //
 
-//#define USINGNEON
+#define USINGNEON
 
 #ifndef FaceIt_FaceDetection_h
 #define FaceIt_FaceDetection_h
