@@ -67,39 +67,137 @@ void applySepiaToneWithDirectPixelManipulationsAndNeon(IplImage* target){
 }
 
 
-void applySepiaToneWithDirectPixelManipulationsAndPthreadsForSMP(IplImage* target){
+
+struct thread_data
+{
+    int	thread_id;
     
+    int image_size;
+    int *r;
+    int *g;
+    int *b;
+};
+
+struct thread_data thread_data_array[4];
+
+
+
+void *doThreadGruntwork(void*threadarg){
+    
+    struct thread_data *my_data;
+    
+    my_data = (struct thread_data *) threadarg;
+    
+    //but do work on your quarter of the image
+    int segment = my_data->image_size/4;
+    int startPoint = my_data->thread_id * segment;
+    int stopPoint = (my_data->thread_id+1) * segment;
+    
+    
+    //do sepia processing in
+    for(int i = startPoint; i < stopPoint; i ++){
+        //store the greyscale value into the blue vector
+        my_data->b[i] = round((my_data->b[i] + my_data->g[i] + my_data->r[i])/3);
+        //set the other 2 vectors with the same greyscale value... da-doi
+        my_data->g[i] = my_data->b[i];
+        my_data->r[i] = my_data->b[i];
+        
+        //scale to give it a reddish-brown (sepia) tinge
+        my_data->b[i] -= 20;
+        my_data->g[i] += 20;
+        my_data->r[i] += 40;
+        
+        //ensure that everything is in bounds (this is done implicitly in OpenCV)
+        if (my_data->b[i] < 0) {
+            my_data->b[i] = 0;
+        }
+        
+        if (my_data->g[i] > 255) {
+            my_data->g[i] = 255;
+        }
+        
+        if (my_data->r[i] > 255) {
+            my_data->r[i] = 255;
+        }
+    }
+ 
+    pthread_exit(NULL);
+}
+
+
+
+
+void applySepiaToneWithDirectPixelManipulationsAndPthreadsForSMP(IplImage* target){
+    //allocate vectors
+    int *b = new int[target->height*target->width];
+    int *g = new int[target->height*target->width];
+    int *r = new int[target->height*target->width];
+    
+    //collect image pixels into vectors
+    int i=0; //pixel Position
+    for( int y=0; y<target->height; y++ ){
+        uchar* ptr = (uchar*) (
+                               target->imageData + y * target->widthStep
+                               );
+        
+        for( int x=0; x<target->width; x++ ) {
+            b[i] = ptr[3*x+0];
+            g[i] = ptr[3*x+1];
+            r[i] = ptr[3*x+2];
+            
+            i++;
+        }
+    }
+    
+    //partition the toning into 4 threads
+    pthread_t threads[4];
+    int rc;
+    for (int t = 0; t < 4; t ++) {
+        //load up resources for this thread
+        thread_data_array[t].thread_id = t;
+        thread_data_array[t].r = r;
+        thread_data_array[t].g = g;
+        thread_data_array[t].b = b;
+        thread_data_array[t].image_size = target->width*target->height;
+        
+        rc = pthread_create(&threads[t], NULL, doThreadGruntwork, (void *)
+                            &thread_data_array[t]);
+        if (rc) {
+            LOGE("ERROR -> pthread_create() the thread was not born");
+        }
+    }
+    
+    //syncronise
+    if(pthread_join(*threads,NULL)){
+        LOGE("ERROR -> pthread_join() the threads wernt stuck back together");
+    }
+    
+    
+    //write image pixels back from vectors
+    i=0; //pixel Position
+    for( int y=0; y<target->height; y++ ){
+        uchar* ptr = (uchar*) (
+                               target->imageData + y * target->widthStep
+                               );
+        
+        for( int x=0; x<target->width; x++ ) {
+            ptr[3*x+0] = b[i];
+            ptr[3*x+1] = g[i];
+            ptr[3*x+2] = r[i];
+            
+            i++;
+        }
+    }
 }
 
 void applySepiaToneWithDirectPixelManipulations(IplImage* target){
-    
-    /*
-    for (int ix=0; ix<target->width; ix++) {
-        for (int iy=0; iy<target->height; iy++) {
-            
-            //extract each pixel
-            int r = cvGet2D(target, iy, ix).val[2];
-            int g = cvGet2D(target, iy, ix).val[1];
-            int b = cvGet2D(target, iy, ix).val[0];
-            
-            //generate a grayscale pixel
-            int p = round(((r+g+b)/3));
-            
-            //to generate sepia tone colouration, use the colourspace
-            //rgb (+40,+20,-20)
-            //CvScalar expects bgr colour so:
-            CvScalar bgr = cvScalar(p-20, p+20, p+40);
-            
-            cvSet2D(target, iy, ix, bgr);
-        }
-    }
-    */
-    
-//    int* b = int[target->height*target->width];
-//    ,g,r;
-//    
 
-    int b,g,r;
+    //allocate vectors
+    int *b = new int[target->height*target->width];
+    int *g = new int[target->height*target->width];
+    int *r = new int[target->height*target->width];
+    
+    //collect image pixels into vectors
     int i=0; //pixel Position
     for( int y=0; y<target->height; y++ ){
         uchar* ptr = (uchar*) (
@@ -107,18 +205,57 @@ void applySepiaToneWithDirectPixelManipulations(IplImage* target){
         );
         
         for( int x=0; x<target->width; x++ ) {
-            b = ptr[3*x+0];
-            g = ptr[3*x+1];
-            r = ptr[3*x+2];
+            b[i] = ptr[3*x+0];
+            g[i] = ptr[3*x+1];
+            r[i] = ptr[3*x+2];
             
-            //jumble the order as a test
-            ptr[3*x+0] = r;
-            ptr[3*x+1] = b;
-            ptr[3*x+2] = g;
-            
+            i++;
         }
     }
     
+    //do sepia processing
+    for(int i = 0; i < target->width*target->height; i ++){
+        //store the greyscale value into the blue vector
+        b[i] = round((b[i] + g[i] + r[i])/3);
+        //set the other 2 vectors with the same greyscale value... da-doi
+        g[i] = b[i];
+        r[i] = b[i];
+        
+        //scale to give it a reddish-brown (sepia) tinge
+        b[i] -= 20;
+        g[i] += 20;
+        r[i] += 40;
+        
+        //ensure that everything is in bounds (this is done implicitly in OpenCV)
+        if (b[i] < 0) {
+            b[i] = 0;
+        }
+        
+        if (g[i] > 255) {
+            g[i] = 255;
+        }
+        
+        if (r[i] > 255) {
+            r[i] = 255;
+        }
+    }
+    
+    
+    //write image pixels back from vectors
+    i=0; //pixel Position
+    for( int y=0; y<target->height; y++ ){
+        uchar* ptr = (uchar*) (
+                               target->imageData + y * target->widthStep
+                               );
+        
+        for( int x=0; x<target->width; x++ ) {
+            ptr[3*x+0] = b[i];
+            ptr[3*x+1] = g[i];
+            ptr[3*x+2] = r[i];
+            
+            i++;
+        }
+    }
 }
 
 
@@ -220,7 +357,10 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_doChainOfImageProcessingOp
     //applySepiaTone(m_sourceImage);
     
     //with direct pixel manipulations
-    applySepiaToneWithDirectPixelManipulations(m_sourceImage);
+    //applySepiaToneWithDirectPixelManipulations(m_sourceImage);
+    
+    //with direct pixel manipulations and pthreads
+    applySepiaToneWithDirectPixelManipulationsAndPthreadsForSMP(m_sourceImage);
     
     processingFinished = true;
     return true;

@@ -25,18 +25,23 @@ obj/local/armeabi-v7a/objs/opencv/ImageProcessor.o: \
  /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/linux/time.h \
  /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/asm/siginfo.h \
  /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/asm-generic/siginfo.h \
- /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/jni.h \
- /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/android/log.h \
- jni/cv/include/cv.h jni/cxcore/include/cxcore.h \
- jni/cxcore/include/cxtypes.h \
- /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/assert.h \
- /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/math.h \
+ /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/pthread.h \
+ /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/signal.h \
  /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/limits.h \
  /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/sys/limits.h \
  /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/linux/limits.h \
  /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/machine/internal_types.h \
  /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/machine/limits.h \
  /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/sys/syslimits.h \
+ /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/asm/signal.h \
+ /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/asm-generic/signal.h \
+ /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/sched.h \
+ /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/jni.h \
+ /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/android/log.h \
+ jni/cv/include/cv.h jni/cxcore/include/cxcore.h \
+ jni/cxcore/include/cxtypes.h \
+ /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/assert.h \
+ /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/math.h \
  jni/cxcore/include/cxerror.h jni/cxcore/include/cvver.h \
  jni/cxcore/include/cxcore.hpp jni/cv/include/cvtypes.h \
  jni/cv/include/cv.hpp jni/cv/include/cvcompat.h \
@@ -105,6 +110,28 @@ jni/ImageProcessor.h:
 
 /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/asm-generic/siginfo.h:
 
+/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/pthread.h:
+
+/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/signal.h:
+
+/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/limits.h:
+
+/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/sys/limits.h:
+
+/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/linux/limits.h:
+
+/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/machine/internal_types.h:
+
+/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/machine/limits.h:
+
+/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/sys/syslimits.h:
+
+/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/asm/signal.h:
+
+/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/asm-generic/signal.h:
+
+/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/sched.h:
+
 /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/jni.h:
 
 /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/android/log.h:
@@ -118,18 +145,6 @@ jni/cxcore/include/cxtypes.h:
 /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/assert.h:
 
 /Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/math.h:
-
-/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/limits.h:
-
-/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/sys/limits.h:
-
-/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/linux/limits.h:
-
-/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/machine/internal_types.h:
-
-/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/machine/limits.h:
-
-/Users/beau/Documents/workspace/AndroidAuxillary/android-ndk-r7b/platforms/android-14/arch-arm/usr/include/sys/syslimits.h:
 
 jni/cxcore/include/cxerror.h:
 
