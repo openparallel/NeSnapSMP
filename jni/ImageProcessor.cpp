@@ -102,56 +102,81 @@ void applySepiaToneWithDirectPixelManipulationsAndNeon(IplImage* target){
     //store the greyscale value into the blue vector
     //b[i] = round((b[i] + g[i] + r[i])/3);
     add_float_c(tmp, b, g, size);
+    
     add_float_c(b, tmp, r, size);
     
     divc_float_c(tmp, b, 3, size);
     
     //set the other 2 vectors with the same greyscale value... da-doi
     //b = tmp;
-    std::copy(tmp, tmp+size, b);
+    memcpy(b, tmp, sizeof(float) * size);
     
     //g = b;
-    memcpy(g, b, sizeof(float) * size);
+    memcpy(g, tmp, sizeof(float) * size);
     
     //r = b;
-    memcpy(g, b, sizeof(float) * size);
+    memcpy(r, tmp, sizeof(float) * size);
     
     //scale to give it a reddish-brown (sepia) tinge
-//    subc_float_c(b, b, 20, size);
-//    b = tmp;
-//    
-//    addc_float_c(g, g, 20, size);
-//    g = tmp;
-//    
-//    addc_float_c(r, r, 40, size);
-//    r = tmp;
-//    
+    //        b[i] -= 20;
+    //        g[i] += 20;
+    //        r[i] += 40;
+    subc_float_c(b, b, 20.0f, size);
     
-//    for(int i = 0; i < target->width*target->height; i ++){
-//        //store the greyscale value into the blue vector
-//        b[i] = round((b[i] + g[i] + r[i])/3);
-//        //set the other 2 vectors with the same greyscale value... da-doi
-//        g[i] = b[i];
-//        r[i] = b[i];
-//        
-//        //scale to give it a reddish-brown (sepia) tinge
-//        b[i] -= 20;
-//        g[i] += 20;
-//        r[i] += 40;
-//        
-//        //ensure that everything is in bounds (this is done implicitly in OpenCV)
-//        if (b[i] < 0) {
-//            b[i] = 0;
+    addc_float_c(g, g, 20.0f, size);
+    
+    addc_float_c(r, r, 40.0f, size);
+      
+    //ensure that everything is in bounds (this is done implicitly in OpenCV)
+    //        if (b[i] < 0) {
+    //            b[i] = 0;
+    //        }
+    //
+    //        if (g[i] > 255) {
+    //            g[i] = 255;
+    //        }
+    //
+    //        if (r[i] > 255) {
+    //            r[i] = 255;
+    //        }
+
+    for (int i = 0; i < size; i++) {
+        if (b[i] < 0) {
+            b[i] = 0;
+        }
+
+        if (g[i] > 255) {
+            g[i] = 255;
+        }
+        
+        if (r[i] > 255) {
+            r[i] = 255;
+        }
+    }
+    
+//    b[size+1] = '\n';
+//    float* bn = b;
+//    float* gn = g;
+//    float* rn = r;
+//    
+//    while (*bn != '\n') {
+//        if (*bn<0) {
+//            *bn=0;
 //        }
 //        
-//        if (g[i] > 255) {
-//            g[i] = 255;
+//        if (*gn>255) {
+//            *gn=255;
 //        }
 //        
-//        if (r[i] > 255) {
-//            r[i] = 255;
+//        if(*rn>255){
+//            *rn=255;
 //        }
+//        
+//        bn++;
+//        gn++;
+//        rn++;
 //    }
+//    
     
 #ifdef TIMEIT
     //off the clock
@@ -360,7 +385,7 @@ void applySepiaToneWithDirectPixelManipulations(IplImage* target){
     //on the clock
     clock_t begin, end;
     double time_spent;
-    
+    //gettimeofday()
     begin = clock();
 #endif
     
