@@ -63,7 +63,127 @@ void applySepiaToneWithDirectPixelManipulationsAndNeonAndPthreadsForSMP(IplImage
 }
 
 void applySepiaToneWithDirectPixelManipulationsAndNeon(IplImage* target){
+    //allocate vectors (using floats to play nice with NEON)
+    float *b = new float[target->height*target->width];
+    float *g = new float[target->height*target->width];
+    float *r = new float[target->height*target->width];
     
+    //collect image pixels into vectors
+    int i=0; //pixel Position
+    for( int y=0; y<target->height; y++ ){
+        uchar* ptr = (uchar*) (
+                               target->imageData + y * target->widthStep
+                               );
+        
+        for( int x=0; x<target->width; x++ ) {
+            b[i] = (float)ptr[3*x+0];
+            g[i] = (float)ptr[3*x+1];
+            r[i] = (float)ptr[3*x+2];
+            
+            i++;
+        }
+    }
+    
+    
+#ifdef TIMEIT
+    //on the clock
+    clock_t begin, end;
+    double time_spent;
+    
+    begin = clock();
+#endif
+    
+    //do sepia processing
+    
+    int size = target->width*target->height;
+    
+    float* tmp = new float[size];
+    
+    //store the greyscale value into the blue vector
+    //b[i] = round((b[i] + g[i] + r[i])/3);
+    add_float_c(tmp, b, g, size);
+    add_float_c(b, tmp, r, size);
+    
+    divc_float_c(tmp, b, 3, size);
+    
+    //set the other 2 vectors with the same greyscale value... da-doi
+    //b = tmp;
+    std::copy(tmp, tmp+size, b);
+    
+    //g = b;
+    memcpy(g, b, sizeof(float) * size);
+    
+    //r = b;
+    memcpy(g, b, sizeof(float) * size);
+    
+    //scale to give it a reddish-brown (sepia) tinge
+//    subc_float_c(b, b, 20, size);
+//    b = tmp;
+//    
+//    addc_float_c(g, g, 20, size);
+//    g = tmp;
+//    
+//    addc_float_c(r, r, 40, size);
+//    r = tmp;
+//    
+    
+//    for(int i = 0; i < target->width*target->height; i ++){
+//        //store the greyscale value into the blue vector
+//        b[i] = round((b[i] + g[i] + r[i])/3);
+//        //set the other 2 vectors with the same greyscale value... da-doi
+//        g[i] = b[i];
+//        r[i] = b[i];
+//        
+//        //scale to give it a reddish-brown (sepia) tinge
+//        b[i] -= 20;
+//        g[i] += 20;
+//        r[i] += 40;
+//        
+//        //ensure that everything is in bounds (this is done implicitly in OpenCV)
+//        if (b[i] < 0) {
+//            b[i] = 0;
+//        }
+//        
+//        if (g[i] > 255) {
+//            g[i] = 255;
+//        }
+//        
+//        if (r[i] > 255) {
+//            r[i] = 255;
+//        }
+//    }
+    
+#ifdef TIMEIT
+    //off the clock
+    end = clock();
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    
+    //print the time taken
+    char my_string[22];
+    sprintf(my_string,"%18.4f",time_spent);
+    LOGE("****************************************");
+    LOGE("Time taken to compute Sepia Tone values:");
+    LOGE(my_string);
+    LOGE("****************************************");
+    
+#endif
+    
+    //write image pixels back from vectors
+    i=0; //pixel Position
+    for( int y=0; y<target->height; y++ ){
+        uchar* ptr = (uchar*) (
+                               target->imageData + y * target->widthStep
+                               );
+        
+        for( int x=0; x<target->width; x++ ) {
+            ptr[3*x+0] = (int)b[i];
+            ptr[3*x+1] = (int)g[i];
+            ptr[3*x+2] = (int)r[i];
+            
+            i++;
+        }
+    }
+
 }
 
 
@@ -306,6 +426,15 @@ void applySepiaToneWithDirectPixelManipulations(IplImage* target){
 
 
 void applySepiaTone(IplImage* target){
+    
+    #ifdef TIMEIT
+        //on the clock
+        clock_t begin, end;
+        double time_spent;
+        
+        begin = clock();
+    #endif
+    
     for (int ix=0; ix<target->width; ix++) {
         for (int iy=0; iy<target->height; iy++) {
             
@@ -325,6 +454,21 @@ void applySepiaTone(IplImage* target){
             cvSet2D(target, iy, ix, bgr);
         }
     }
+    
+    #ifdef TIMEIT
+        //off the clock
+        end = clock();
+        time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+        
+        //print the time taken
+        char my_string[22];
+        sprintf(my_string,"%18.4f",time_spent);
+        LOGE("****************************************");
+        LOGE("Time taken to compute Sepia Tone values:");
+        LOGE(my_string);
+        LOGE("****************************************");
+        
+    #endif
 }
 
 void overlayImage(IplImage* target, IplImage* source, int x, int y) {
@@ -398,6 +542,7 @@ JNICALL
 Java_org_openparallel_imagethresh_ImageThreshActivity_doChainOfImageProcessingOperations(JNIEnv* env,
                                                                                         jobject thiz){
     processingFinished = false;
+    //uncomment different versions of sepia toning operations to see how they perform.
     
     //original with OpenCV
     //applySepiaTone(m_sourceImage);
@@ -406,8 +551,15 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_doChainOfImageProcessingOp
     //applySepiaToneWithDirectPixelManipulations(m_sourceImage);
     
     //with direct pixel manipulations and pthreads
-    applySepiaToneWithDirectPixelManipulationsAndPthreadsForSMP(m_sourceImage);
+    //applySepiaToneWithDirectPixelManipulationsAndPthreadsForSMP(m_sourceImage);
     
+    //with direct pixel manipulation and Neon vector operations
+    applySepiaToneWithDirectPixelManipulationsAndNeon(m_sourceImage);
+
+    //with neon and SMP (pthreads)
+    //applySepiaToneWithDirectPixelManipulationsAndNeonAndPthreadsForSMP(m_sourceImage);
+
+        
     processingFinished = true;
     return true;
     
