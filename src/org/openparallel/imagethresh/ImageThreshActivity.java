@@ -382,7 +382,7 @@ public class ImageThreshActivity extends Activity {
 					Log.i("Captain's Log", "Image Passed into the NDK");
 
 					if(didSet){
-						boolean benchmarking = true;
+						boolean benchmarking = false;
 						if(benchmarking){
 							//process the data
 							//this.doGrayscaleTransform();
@@ -443,7 +443,7 @@ public class ImageThreshActivity extends Activity {
 								fos.write("Run\tMethod\tMilliseconds\n".getBytes());
 
 								for(int i = 0; i < 100; i++){
-									fos.write(((i+1)+"\t"+ 2 +"\t"+ runtimes[i] +"\n").getBytes());
+									fos.write(((i+1)+"\t"+ 1 +"\t"+ runtimes[i] +"\n").getBytes());
 								}
 
 								fos.close();

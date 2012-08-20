@@ -346,7 +346,7 @@ LOCAL_C_INCLUDES := \
         $(LOCAL_PATH)/otherlibs/highgui \
         $(LOCAL_PATH)/headers/ \
         $(LOCAL_PATH)/inc 
-LOCAL_CFLAGS := $(LOCAL_C_INCLUDES:%=-I%) -mfloat-abi=softfp -mfpu=neon -march=armv7 -mthumb
+LOCAL_CFLAGS := $(LOCAL_C_INCLUDES:%=-I%) -mfloat-abi=softfp -mfpu=neon -march=armv7 -mthumb -O2 -ftree-vectorize
 
 ifeq ($(ARCH_ARM_HAVE_NEON),true)
 LOCAL_SRC_FILES += $(ne10_neon_source)

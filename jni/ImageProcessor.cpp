@@ -58,6 +58,70 @@ void Log(char* message, bool errorFlag){
 }
 
 
+void applySepiaToneWithDirectPixelManipulationsAndNeonAndPthreadsForSMP(IplImage* target){
+    
+}
+
+void applySepiaToneWithDirectPixelManipulationsAndNeon(IplImage* target){
+    
+}
+
+
+void applySepiaToneWithDirectPixelManipulationsAndPthreadsForSMP(IplImage* target){
+    
+}
+
+void applySepiaToneWithDirectPixelManipulations(IplImage* target){
+    
+    /*
+    for (int ix=0; ix<target->width; ix++) {
+        for (int iy=0; iy<target->height; iy++) {
+            
+            //extract each pixel
+            int r = cvGet2D(target, iy, ix).val[2];
+            int g = cvGet2D(target, iy, ix).val[1];
+            int b = cvGet2D(target, iy, ix).val[0];
+            
+            //generate a grayscale pixel
+            int p = round(((r+g+b)/3));
+            
+            //to generate sepia tone colouration, use the colourspace
+            //rgb (+40,+20,-20)
+            //CvScalar expects bgr colour so:
+            CvScalar bgr = cvScalar(p-20, p+20, p+40);
+            
+            cvSet2D(target, iy, ix, bgr);
+        }
+    }
+    */
+    
+//    int* b = int[target->height*target->width];
+//    ,g,r;
+//    
+
+    int b,g,r;
+    int i=0; //pixel Position
+    for( int y=0; y<target->height; y++ ){
+        uchar* ptr = (uchar*) (
+            target->imageData + y * target->widthStep
+        );
+        
+        for( int x=0; x<target->width; x++ ) {
+            b = ptr[3*x+0];
+            g = ptr[3*x+1];
+            r = ptr[3*x+2];
+            
+            //jumble the order as a test
+            ptr[3*x+0] = r;
+            ptr[3*x+1] = b;
+            ptr[3*x+2] = g;
+            
+        }
+    }
+    
+}
+
+
 void applySepiaTone(IplImage* target){
     for (int ix=0; ix<target->width; ix++) {
         for (int iy=0; iy<target->height; iy++) {
@@ -152,7 +216,11 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_doChainOfImageProcessingOp
                                                                                         jobject thiz){
     processingFinished = false;
     
-    applySepiaTone(m_sourceImage);
+    //original with OpenCV
+    //applySepiaTone(m_sourceImage);
+    
+    //with direct pixel manipulations
+    applySepiaToneWithDirectPixelManipulations(m_sourceImage);
     
     processingFinished = true;
     return true;

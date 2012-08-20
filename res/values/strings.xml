@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">NeSnap</string>
+    <string name="app_name">NeSnapSMP</string>
    	<string name="main_text_view_string">Please select an effect below...</string>
 	<string name="fun_house_text">Fun House</string>
 	<string name="sketch_book_text">Sketch Book</string>
