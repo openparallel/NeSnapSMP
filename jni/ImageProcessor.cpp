@@ -57,9 +57,189 @@ void Log(char* message, bool errorFlag){
     return;
 }
 
+struct thread_data
+{
+    int	thread_id;
+    
+    int image_size;
+    int *r;
+    int *g;
+    int *b;
+};
+
+struct thread_data thread_data_array[4];
+
+
+//void *doThreadGruntworkWithNeon(void*threadarg){
+//    
+//    struct thread_data *my_data;
+//    
+//    my_data = (struct thread_data *) threadarg;
+//    
+//    //but do work on your quarter of the image
+//    int segment = my_data->image_size/4;
+//    int startPoint = my_data->thread_id * segment;
+//    int stopPoint = (my_data->thread_id+1) * segment;
+//    
+//    float *r = new float[my_data->image_size];
+//    
+//    
+//    //do sepia processing
+//    
+//    int size = target->width*target->height;
+//    
+//    float* tmp = new float[size];
+//    
+//    //store the greyscale value into the blue vector
+//    //b[i] = round((b[i] + g[i] + r[i])/3);
+//    add_float_c(tmp, b, g, size);
+//    
+//    add_float_c(b, tmp, r, size);
+//    
+//    divc_float_c(tmp, b, 3, size);
+//    
+//    //set the other 2 vectors with the same greyscale value... da-doi
+//    //b = tmp;
+//    memcpy(b, tmp, sizeof(float) * size);
+//    
+//    //g = b;
+//    memcpy(g, tmp, sizeof(float) * size);
+//    
+//    //r = b;
+//    memcpy(r, tmp, sizeof(float) * size);
+//    
+//    //scale to give it a reddish-brown (sepia) tinge
+//    //        b[i] -= 20;
+//    //        g[i] += 20;
+//    //        r[i] += 40;
+//    subc_float_c(b, b, 20.0f, size);
+//    
+//    addc_float_c(g, g, 20.0f, size);
+//    
+//    addc_float_c(r, r, 40.0f, size);
+//    
+//    //ensure that everything is in bounds (this is done implicitly in OpenCV)
+//    //        if (b[i] < 0) {
+//    //            b[i] = 0;
+//    //        }
+//    //
+//    //        if (g[i] > 255) {
+//    //            g[i] = 255;
+//    //        }
+//    //
+//    //        if (r[i] > 255) {
+//    //            r[i] = 255;
+//    //        }
+//    
+//    for (int i = 0; i < size; i++) {
+//        if (b[i] < 0) {
+//            b[i] = 0;
+//        }
+//        
+//        if (g[i] > 255) {
+//            g[i] = 255;
+//        }
+//        
+//        if (r[i] > 255) {
+//            r[i] = 255;
+//        }
+//    }
+//
+//    
+//    my_data->r = r;
+//    my_data->g = g;
+//    my_data->b = b;
+//    
+//    
+//    pthread_exit(NULL);
+//}
+
+
 
 void applySepiaToneWithDirectPixelManipulationsAndNeonAndPthreadsForSMP(IplImage* target){
+    //allocate vectors
+    int *b = new int[target->height*target->width];
+    int *g = new int[target->height*target->width];
+    int *r = new int[target->height*target->width];
     
+    //collect image pixels into vectors
+    int i=0; //pixel Position
+    for( int y=0; y<target->height; y++ ){
+        uchar* ptr = (uchar*) (
+                               target->imageData + y * target->widthStep
+                               );
+        
+        for( int x=0; x<target->width; x++ ) {
+            b[i] = ptr[3*x+0];
+            g[i] = ptr[3*x+1];
+            r[i] = ptr[3*x+2];
+            
+            i++;
+        }
+    }
+    
+#ifdef TIMEIT
+    //on the clock
+    clock_t begin, end;
+    double time_spent;
+    
+    begin = clock();
+#endif
+    
+    //partition the toning into 4 threads
+    pthread_t threads[4];
+    int rc;
+    for (int t = 0; t < 4; t ++) {
+        //load up resources for this thread
+        thread_data_array[t].thread_id = t;
+        thread_data_array[t].r = r;
+        thread_data_array[t].g = g;
+        thread_data_array[t].b = b;
+        thread_data_array[t].image_size = target->width*target->height;
+        
+//        rc = pthread_create(&threads[t], NULL, doThreadGruntworkWithNeon, (void *)
+//                            &thread_data_array[t]);
+        if (rc) {
+            LOGE("ERROR -> pthread_create() the thread was not born");
+        }
+    }
+    
+    //syncronise
+    if(pthread_join(*threads,NULL)){
+        LOGE("ERROR -> pthread_join() the threads weren't stuck back together");
+    }
+    
+#ifdef TIMEIT
+    //off the clock
+    end = clock();
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    
+    //print the time taken
+    char my_string[22];
+    sprintf(my_string,"%18.4f",time_spent);
+    LOGV("****************************************");
+    LOGV("Time taken to compute Sepia Tone values:");
+    LOGV(my_string);
+    LOGV("****************************************");
+    
+#endif
+    
+    //write image pixels back from vectors
+    i=0; //pixel Position
+    for( int y=0; y<target->height; y++ ){
+        uchar* ptr = (uchar*) (
+                               target->imageData + y * target->widthStep
+                               );
+        
+        for( int x=0; x<target->width; x++ ) {
+            ptr[3*x+0] = b[i];
+            ptr[3*x+1] = g[i];
+            ptr[3*x+2] = r[i];
+            
+            i++;
+        }
+    }
+
 }
 
 void applySepiaToneWithDirectPixelManipulationsAndNeon(IplImage* target){
@@ -154,29 +334,30 @@ void applySepiaToneWithDirectPixelManipulationsAndNeon(IplImage* target){
         }
     }
     
-//    b[size+1] = '\n';
-//    float* bn = b;
-//    float* gn = g;
-//    float* rn = r;
-//    
-//    while (*bn != '\n') {
-//        if (*bn<0) {
-//            *bn=0;
-//        }
-//        
-//        if (*gn>255) {
-//            *gn=255;
-//        }
-//        
-//        if(*rn>255){
-//            *rn=255;
-//        }
-//        
-//        bn++;
-//        gn++;
-//        rn++;
-//    }
-//    
+    //tried for a more efficent method to perform checking (by removing 1 iterator variable)
+    //    b[size+1] = '\n';
+    //    float* bn = b;
+    //    float* gn = g;
+    //    float* rn = r;
+    //    
+    //    while (*bn != '\n') {
+    //        if (*bn<0) {
+    //            *bn=0;
+    //        }
+    //        
+    //        if (*gn>255) {
+    //            *gn=255;
+    //        }
+    //        
+    //        if(*rn>255){
+    //            *rn=255;
+    //        }
+    //        
+    //        bn++;
+    //        gn++;
+    //        rn++;
+    //    }
+    //    
     
 #ifdef TIMEIT
     //off the clock
@@ -213,17 +394,6 @@ void applySepiaToneWithDirectPixelManipulationsAndNeon(IplImage* target){
 
 
 
-struct thread_data
-{
-    int	thread_id;
-    
-    int image_size;
-    int *r;
-    int *g;
-    int *b;
-};
-
-struct thread_data thread_data_array[4];
 
 
 
