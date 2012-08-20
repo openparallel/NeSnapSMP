@@ -7,6 +7,7 @@
 //
 
 #define USINGNEON
+#define TIMEIT
 
 #ifndef FaceIt_FaceDetection_h
 #define FaceIt_FaceDetection_h

@@ -149,6 +149,14 @@ void applySepiaToneWithDirectPixelManipulationsAndPthreadsForSMP(IplImage* targe
         }
     }
     
+    #ifdef TIMEIT
+        //on the clock
+        clock_t begin, end;
+        double time_spent;
+        
+        begin = clock();
+    #endif
+    
     //partition the toning into 4 threads
     pthread_t threads[4];
     int rc;
@@ -169,9 +177,23 @@ void applySepiaToneWithDirectPixelManipulationsAndPthreadsForSMP(IplImage* targe
     
     //syncronise
     if(pthread_join(*threads,NULL)){
-        LOGE("ERROR -> pthread_join() the threads wernt stuck back together");
+        LOGE("ERROR -> pthread_join() the threads weren't stuck back together");
     }
     
+    #ifdef TIMEIT
+        //off the clock
+        end = clock();
+        time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+        
+        //print the time taken
+        char my_string[22];
+        sprintf(my_string,"%18.4f",time_spent);
+        LOGV("****************************************");
+        LOGV("Time taken to compute Sepia Tone values:");
+        LOGV(my_string);
+        LOGV("****************************************");
+
+    #endif
     
     //write image pixels back from vectors
     i=0; //pixel Position
@@ -213,7 +235,17 @@ void applySepiaToneWithDirectPixelManipulations(IplImage* target){
         }
     }
     
+    
+#ifdef TIMEIT
+    //on the clock
+    clock_t begin, end;
+    double time_spent;
+    
+    begin = clock();
+#endif
+    
     //do sepia processing
+    
     for(int i = 0; i < target->width*target->height; i ++){
         //store the greyscale value into the blue vector
         b[i] = round((b[i] + g[i] + r[i])/3);
@@ -240,6 +272,20 @@ void applySepiaToneWithDirectPixelManipulations(IplImage* target){
         }
     }
     
+#ifdef TIMEIT
+    //off the clock
+    end = clock();
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    
+    //print the time taken
+    char my_string[22];
+    sprintf(my_string,"%18.4f",time_spent);
+    LOGV("****************************************");
+    LOGV("Time taken to compute Sepia Tone values:");
+    LOGV(my_string);
+    LOGV("****************************************");
+    
+#endif
     
     //write image pixels back from vectors
     i=0; //pixel Position
