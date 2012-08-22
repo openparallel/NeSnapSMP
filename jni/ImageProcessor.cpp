@@ -91,6 +91,7 @@ void *doThreadGruntworkWithNeon(void*threadarg){
 
     //do sepia processing
     float* tmp = new float[segment];
+
     
     //store the greyscale value into the blue vector
     //b[i] = round((b[i] + g[i] + r[i])/3);
