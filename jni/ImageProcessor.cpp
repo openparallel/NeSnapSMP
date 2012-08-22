@@ -72,7 +72,7 @@ struct neon_thread_data
 struct neon_thread_data neon_thread_data_array[NUMBER_OF_THREADS];
 
 
-void *doThreadGruntworkWithNeon(void*threadarg){
+void *doThreadGruntworkWithNe10(void*threadarg){
     struct neon_thread_data *my_data;
     
     my_data = (struct neon_thread_data *) threadarg;
@@ -92,6 +92,9 @@ void *doThreadGruntworkWithNeon(void*threadarg){
     //do sepia processing
     float* tmp = new float[segment];
 
+    /*
+     * Start of for loop to 
+     */
     
     //store the greyscale value into the blue vector
     //b[i] = round((b[i] + g[i] + r[i])/3);
@@ -155,7 +158,7 @@ void *doThreadGruntworkWithNeon(void*threadarg){
 
 
 
-void applySepiaToneWithDirectPixelManipulationsAndNeonAndPthreadsForSMP(IplImage* target){
+void applySepiaToneWithDirectPixelManipulationsAndNe10AndPthreadsForSMP(IplImage* target){
     //allocate vectors
     float *b = new float[target->height*target->width];
     float *g = new float[target->height*target->width];
@@ -196,7 +199,7 @@ void applySepiaToneWithDirectPixelManipulationsAndNeonAndPthreadsForSMP(IplImage
         neon_thread_data_array[t].b = b;
         neon_thread_data_array[t].image_size = target->width*target->height;
         
-        rc = pthread_create(&threads[t], NULL, doThreadGruntworkWithNeon, (void *)
+        rc = pthread_create(&threads[t], NULL, doThreadGruntworkWithNe10, (void *)
                             &neon_thread_data_array[t]);
         if (rc) {
             LOGE("ERROR -> pthread_create() the thread was not born");
@@ -241,7 +244,7 @@ void applySepiaToneWithDirectPixelManipulationsAndNeonAndPthreadsForSMP(IplImage
 
 }
 
-void applySepiaToneWithDirectPixelManipulationsAndNeon(IplImage* target){
+void applySepiaToneWithDirectPixelManipulationsAndNe10(IplImage* target){
     //allocate vectors (using floats to play nice with NEON)
     float *b = new float[target->height*target->width];
     float *g = new float[target->height*target->width];
@@ -277,6 +280,9 @@ void applySepiaToneWithDirectPixelManipulationsAndNeon(IplImage* target){
     int size = target->width*target->height;
     
     float* tmp = new float[size];
+    
+    //to avoid throttling cache operate on smaller partiotions of the vectors
+    
     
     //store the greyscale value into the blue vector
     //b[i] = round((b[i] + g[i] + r[i])/3);
@@ -417,7 +423,9 @@ void *doThreadGruntwork(void*threadarg){
     int startPoint = my_data->thread_id * segment;
     int stopPoint = (my_data->thread_id+1) * segment;
     
-    
+    /*
+     *before
+     *
     //do sepia processing in
     for(int i = startPoint; i < stopPoint; i ++){
         //store the greyscale value into the blue vector
@@ -444,7 +452,22 @@ void *doThreadGruntwork(void*threadarg){
             my_data->r[i] = 255;
         }
     }
- 
+     *
+     *after
+     */
+    
+    for(int i = startPoint; i < stopPoint; i ++){
+        //you would think it is faster to *0.3 but nope!
+        my_data->b[i] = (int)((my_data->b[i] + my_data->g[i] + my_data->r[i])/3)-20;
+    
+        my_data->g[i] = my_data->b[i]+40;
+        my_data->r[i] = my_data->b[i]+60;
+        
+        my_data->b[i] = MAX(my_data->b[i],0);
+        my_data->g[i] = MIN(my_data->g[i],255);
+        my_data->r[i] = MIN(my_data->r[i],255);
+    }
+    
     pthread_exit(NULL);
 }
 
@@ -512,10 +535,10 @@ void applySepiaToneWithDirectPixelManipulationsAndPthreadsForSMP(IplImage* targe
         //print the time taken
         char my_string[22];
         sprintf(my_string,"%18.4f",time_spent);
-        LOGV("****************************************");
-        LOGV("Time taken to compute Sepia Tone values:");
-        LOGV(my_string);
-        LOGV("****************************************");
+        LOGE("****************************************");
+        LOGE("Time taken to compute Sepia Tone values:");
+        LOGE(my_string);
+        LOGE("****************************************");
 
     #endif
     
@@ -571,29 +594,46 @@ void applySepiaToneWithDirectPixelManipulations(IplImage* target){
     //do sepia processing
     
     for(int i = 0; i < target->width*target->height; i ++){
+        /*
+         *before:
         //store the greyscale value into the blue vector
-        b[i] = round((b[i] + g[i] + r[i])/3);
+        b[i] = (int)((b[i] + g[i] + r[i])/3);
         //set the other 2 vectors with the same greyscale value... da-doi
-        g[i] = b[i];
-        r[i] = b[i];
+        g[i] = b[i]
+        r[i] = b[i]
         
         //scale to give it a reddish-brown (sepia) tinge
         b[i] -= 20;
         g[i] += 20;
         r[i] += 40;
+         
+        //ensure that everything is in bounds (this is done implicitly in OpenCV) 
+         if (b[i] < 0) {
+         b[i] = 0;
+         }
+         
+         if (g[i] > 255) {
+         g[i] = 255;
+         }
+         
+         if (r[i] > 255) {
+         r[i] = 255;
+         }
+         
+         *
+         *after:
+         */
+
+        //you would think it is faster to *0.3 but nope!
+        b[i] = (int)((b[i] + g[i] + r[i])/3)-20;
         
-        //ensure that everything is in bounds (this is done implicitly in OpenCV)
-        if (b[i] < 0) {
-            b[i] = 0;
-        }
+        g[i] = b[i]+40;
+        r[i] = b[i]+60;
         
-        if (g[i] > 255) {
-            g[i] = 255;
-        }
+        b[i] = MAX(b[i],0);
+        g[i] = MIN(g[i],255);
+        r[i] = MIN(r[i],255);
         
-        if (r[i] > 255) {
-            r[i] = 255;
-        }
     }
     
 #ifdef TIMEIT
@@ -604,10 +644,10 @@ void applySepiaToneWithDirectPixelManipulations(IplImage* target){
     //print the time taken
     char my_string[22];
     sprintf(my_string,"%18.4f",time_spent);
-    LOGV("****************************************");
-    LOGV("Time taken to compute Sepia Tone values:");
-    LOGV(my_string);
-    LOGV("****************************************");
+    LOGE("****************************************");
+    LOGE("Time taken to compute Sepia Tone values:");
+    LOGE(my_string);
+    LOGE("****************************************");
     
 #endif
     
@@ -755,13 +795,13 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_doChainOfImageProcessingOp
     //applySepiaToneWithDirectPixelManipulations(m_sourceImage);
     
     //with direct pixel manipulations and pthreads
-    //applySepiaToneWithDirectPixelManipulationsAndPthreadsForSMP(m_sourceImage);
+    applySepiaToneWithDirectPixelManipulationsAndPthreadsForSMP(m_sourceImage);
     
     //with direct pixel manipulation and Neon vector operations
-    //applySepiaToneWithDirectPixelManipulationsAndNeon(m_sourceImage);
+    //applySepiaToneWithDirectPixelManipulationsAndNe10(m_sourceImage);
 
     //with neon and SMP (pthreads)
-    applySepiaToneWithDirectPixelManipulationsAndNeonAndPthreadsForSMP(m_sourceImage);
+    //applySepiaToneWithDirectPixelManipulationsAndNe10AndPthreadsForSMP(m_sourceImage);
 
         
     processingFinished = true;
