@@ -81,6 +81,128 @@ uint8x8_t vdiv3_u8(uint8x8_t in){
     return in;
 }
 
+void applySepiaToneWithDirectPixelManipulationsAndNeonSSEAndPthreadsForSMP(IplImage* target){
+    
+    //allocate vectors
+    uint8_t *b = new uint8_t[target->height*target->width];
+    uint8_t *g = new uint8_t[target->height*target->width];
+    uint8_t *r = new uint8_t[target->height*target->width];
+    
+    uint8_t* rptr = r;
+    uint8_t* bptr = b;
+    uint8_t* gptr = g;
+    
+    //collect image pixels into vectors
+    int i=0; //pixel Position
+    for( int y=0; y<target->height; y++ ){
+        uchar* ptr = (uchar*) (
+                               target->imageData + y * target->widthStep
+                               );
+        
+        for( int x=0; x<target->width; x++ ) {
+            b[i] = ptr[3*x+0];
+            g[i] = ptr[3*x+1];
+            r[i] = ptr[3*x+2];
+            
+            i++;
+        }
+    }
+    
+    
+#ifdef TIMEIT
+    //on the clock
+    clock_t begin, end;
+    double time_spent;
+    //gettimeofday()
+    begin = clock();
+#endif
+    
+    int n = target->width*target->height;
+    
+    uint8x8_t rfac = vdup_n_u8 (40);
+    uint8x8_t gfac = vdup_n_u8 (20);
+    uint8x8_t bfac = vdup_n_u8 (20);
+    
+    uint8x8_t imin = vdup_n_u8 (0);
+    uint8x8_t imax = vdup_n_u8 (255);
+    
+    n/=8;
+    
+    for (int j=0; j<n; j++){
+        //get values for this block
+        uint8x8_t red = vld1_u8(rptr);
+        uint8x8_t grn = vld1_u8(gptr);
+        uint8x8_t blu = vld1_u8(bptr);
+        //intensity vector
+        uint8x8_t ins;
+        
+        //average the channel intensity
+        red = vdiv3_u8(red);
+        grn = vdiv3_u8(grn);
+        blu = vdiv3_u8(blu);
+        
+        //add all channels together
+        ins = vadd_u8(blu,vadd_u8(red,grn));
+        
+        //add sepia weights
+        blu = vqsub_u8(ins, bfac);
+        grn = vqadd_u8(ins, gfac);
+        red = vqadd_u8(ins, rfac);
+        
+        //do boundary checks
+        blu = vmax_u8(blu, imin);
+        red = vmin_u8(red, imax);
+        grn = vmin_u8(grn, imax);
+        
+        //set values for this block
+        vst1_u8(rptr, red);
+        vst1_u8(gptr, grn);
+        vst1_u8(bptr, blu);
+        
+        rptr+=8;
+        bptr+=8;
+        gptr+=8;
+    }
+
+    
+#ifdef TIMEIT
+    //off the clock
+    end = clock();
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    
+    //print the time taken
+    char my_string[22];
+    sprintf(my_string,"%18.4f",time_spent);
+    LOGE("****************************************");
+    LOGE("Time taken to compute Sepia Tone values:");
+    LOGE(my_string);
+    LOGE("****************************************");
+    
+#endif
+    
+    //write image pixels back from vectors
+    i=0; //pixel Position
+    for( int y=0; y<target->height; y++ ){
+        uchar* ptr = (uchar*) (
+                               target->imageData + y * target->widthStep
+                               );
+        
+        for( int x=0; x<target->width; x++ ) {
+            ptr[3*x+0] = b[i];
+            ptr[3*x+1] = g[i];
+            ptr[3*x+2] = r[i];
+            
+            i++;
+        }
+    }
+    
+    delete b;
+    delete g;
+    delete r;
+    
+}
+
+
 void applySepiaToneWithDirectPixelManipulationsAndNeonSSE(IplImage* target){
     
     //allocate vectors
@@ -145,15 +267,13 @@ void applySepiaToneWithDirectPixelManipulationsAndNeonSSE(IplImage* target){
         ins = vadd_u8(blu,vadd_u8(red,grn));
         
         //add sepia weights
-        blu = vsub_u8(ins, bfac);
-        grn = vadd_u8(ins, gfac);
-        red = vadd_u8(ins, rfac);
+        blu = vqsub_u8(ins, bfac);
+        grn = vqadd_u8(ins, gfac);
+        red = vqadd_u8(ins, rfac);
         
         //do boundary checks
         blu = vmax_u8(blu, imin);
-        
         red = vmin_u8(red, imax);
-        
         grn = vmin_u8(grn, imax);
         
         //set values for this block
@@ -239,7 +359,51 @@ void *doThreadGruntworkWithNe10(void*threadarg){
     float* tmp = new float[segment];
 
     /*
-     * Start of for loop to 
+     * Start of for loop to partition into subvectors
+     int totSize = target->width*target->height;
+     
+     int size = 8;
+     
+     //    char tmp_str[22];
+     //    sprintf(tmp_str,"%i",totSize);
+     //
+     //    LOGE("The size of the image is ");
+     //    LOGE(tmp_str);
+     
+     
+     float* tmp = new float[size];
+     
+     //to avoid throttling cache operate on smaller partiotions of the vectors
+     for (int i = 0 ; i < totSize; i += size) {
+     
+     add_float_c(tmp, b+i, g+i, size);
+     add_float_c(b+i, tmp, r+i, size);
+     //divc_float_c(tmp, b+i, 3, size);
+     mulc_float_c(tmp, b+i, 0.3f, size);
+     
+     //set the other 2 vectors with the same greyscale value... da-doi
+     //b = tmp;
+     memcpy(b+i, tmp, sizeof(float) * size);
+     
+     //g = b;
+     memcpy(g+i, tmp, sizeof(float) * size);
+     
+     //r = b;
+     memcpy(r+i, tmp, sizeof(float) * size);
+     
+     subc_float_c(b+i, b+i, 20.0f, size);
+     addc_float_c(g+i, g+i, 20.0f, size);
+     addc_float_c(r+i, r+i, 40.0f, size);
+     
+     
+     for (int j = 0; j < size; j++) {
+     int pos = i+j;
+     b[pos] = MAX(b[pos],0);
+     g[pos] = MIN(g[pos],255);
+     r[pos] = MIN(r[pos],255);
+     }
+     }
+
      */
     
     //store the greyscale value into the blue vector
@@ -517,18 +681,14 @@ void applySepiaToneWithDirectPixelManipulationsAndNe10(IplImage* target){
     
     int totSize = target->width*target->height;
     
-    int size = 4;
+    int size = 8;
     
-    char tmp_str[22];
-    sprintf(tmp_str,"%i",totSize);
-    
-    LOGE("The size of the image is ");
-    LOGE(tmp_str);
+//    char tmp_str[22];
+//    sprintf(tmp_str,"%i",totSize);
 //    
-//    sprintf(tmp_str,"%i",size);
-//    
-//    LOGE("The size of the local block is ");
+//    LOGE("The size of the image is ");
 //    LOGE(tmp_str);
+
     
     float* tmp = new float[size];
     
@@ -1006,8 +1166,9 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_doChainOfImageProcessingOp
     //with neon
     applySepiaToneWithDirectPixelManipulationsAndNeonSSE(m_sourceImage);
     
-    //with neon with SMP
-    
+    //with neon and SMP
+    //applySepiaToneWithDirectPixelManipulationsAndNeonSSEAndPthreadsForSMP(m_sourceImage);
+
     
     processingFinished = true;
     return true;
