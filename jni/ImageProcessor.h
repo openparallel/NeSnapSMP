@@ -35,7 +35,6 @@
 #include <jni.h>
 #include <android/log.h>
 
-
 #include "cv.h"
 #include "cxcore.h"
 #include "cvaux.h"
@@ -74,12 +73,52 @@ static const char* fmtSignBmp = "BM";
 
 IplImage *m_sourceImage = 0;
 
+float timeStamp;
 
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+    //the new ones:
+    JNIEXPORT
+    jfloat
+    JNICALL
+    Java_org_openparallel_imagethresh_ImageThreshActivity_STWithOpenCV(JNIEnv* env,
+                                                                                             jobject thiz);
+    JNIEXPORT
+    jfloat
+    JNICALL
+    Java_org_openparallel_imagethresh_ImageThreshActivity_STWithManualManips(JNIEnv* env,
+                                                                       jobject thiz);
+    JNIEXPORT
+    jfloat
+    JNICALL
+    Java_org_openparallel_imagethresh_ImageThreshActivity_STWithManualManipsAndSMP(JNIEnv* env,
+                                                                       jobject thiz);
+    JNIEXPORT
+    jfloat
+    JNICALL
+    Java_org_openparallel_imagethresh_ImageThreshActivity_STWithNeTen(JNIEnv* env,
+                                                                       jobject thiz);
+    JNIEXPORT
+    jfloat
+    JNICALL
+    Java_org_openparallel_imagethresh_ImageThreshActivity_STWithNeTenAndSMP(JNIEnv* env,
+                                                                       jobject thiz);
+    JNIEXPORT
+    jfloat
+    JNICALL
+    Java_org_openparallel_imagethresh_ImageThreshActivity_STWithNeon(JNIEnv* env,
+                                                                       jobject thiz);
+    JNIEXPORT
+    jfloat
+    JNICALL
+    Java_org_openparallel_imagethresh_ImageThreshActivity_STWithNeonAndSMP(JNIEnv* env,
+                                                                       jobject thiz);
+    
+    
+    //old ones
     
     JNIEXPORT
     jboolean

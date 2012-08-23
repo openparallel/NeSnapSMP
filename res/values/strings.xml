@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">NeSnapSMP</string>
-   	<string name="main_text_view_string">Please select an effect below...</string>
-	<string name="fun_house_text">Fun House</string>
-	<string name="sketch_book_text">Sketch Book</string>
-	<string name="sepia_tone_text">Sepia Tone</string>
+    <string name="app_name">NeTone</string>
+   	<string name="main_text_view_string">Select one of the many implementations of Sepia Toning...</string>
+	<string name="sepia_tone_with_opencv_text">Sepia Tone with OpenCV</string>
 	<string name="save_text">Save It!</string>
-	<string name="neonise_text">Neonise</string>
+	<string name="sepia_tone_with_manual_manips_text">Sepia Tone with Manual Manipulations</string>
+	<string name="sepia_tone_with_manual_manips_and_smp_text">Sepia Tone with Manual Manipulations and SMP</string>
+	<string name="sepia_tone_with_ne10_text">Sepia Tone with Ne10</string>
+	<string name="sepia_tone_with_ne10_and_smp_text">Sepia Tone with Ne10 and SMP</string>
+	<string name="sepia_tone_with_neon_text">Sepia Tone with Neon</string>
+	<string name="sepia_tone_with_neon_and_smp_text">Sepia Tone with Neon and SMP</string>
 	
 </resources>

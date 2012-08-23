@@ -232,6 +232,8 @@ void applySepiaToneWithDirectPixelManipulationsAndNeonSSEAndPthreadsForSMP(IplIm
     LOGE("Time taken to compute Sepia Tone values:");
     LOGE(my_string);
     LOGE("****************************************");
+    //saving global timeStamp to return
+    timeStamp = time_spent;
     
 #endif
     
@@ -353,6 +355,9 @@ void applySepiaToneWithDirectPixelManipulationsAndNeonSSE(IplImage* target){
     LOGE("Time taken to compute Sepia Tone values:");
     LOGE(my_string);
     LOGE("****************************************");
+    
+    //saving global timeStamp to return
+    timeStamp = time_spent;
     
 #endif
     
@@ -512,6 +517,9 @@ void applySepiaToneWithDirectPixelManipulationsAndNe10AndPthreadsForSMP(IplImage
     LOGE("Time taken to compute Sepia Tone values:");
     LOGE(my_string);
     LOGE("****************************************");
+    
+    //saving global timeStamp to return
+    timeStamp = time_spent;
     
 #endif
     
@@ -709,6 +717,9 @@ void applySepiaToneWithDirectPixelManipulationsAndNe10(IplImage* target){
     LOGE(my_string);
     LOGE("****************************************");
     
+    //saving global timeStamp to return
+    timeStamp = time_spent;
+    
 #endif
     
     //write image pixels back from vectors
@@ -872,6 +883,9 @@ void applySepiaToneWithDirectPixelManipulationsAndPthreadsForSMP(IplImage* targe
         LOGE(my_string);
         LOGE("****************************************");
 
+        //saving global timeStamp to return
+        timeStamp = time_spent;
+    
     #endif
     
     //write image pixels back from vectors
@@ -981,6 +995,9 @@ void applySepiaToneWithDirectPixelManipulations(IplImage* target){
     LOGE(my_string);
     LOGE("****************************************");
     
+    //saving global timeStamp to return
+    timeStamp = time_spent;
+    
 #endif
     
     //write image pixels back from vectors
@@ -1044,6 +1061,8 @@ void applySepiaTone(IplImage* target){
         LOGE(my_string);
         LOGE("****************************************");
         
+        //saving global timeStamp to return
+        timeStamp = time_spent;
     #endif
 }
 
@@ -1130,7 +1149,7 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_doChainOfImageProcessingOp
     //applySepiaToneWithDirectPixelManipulationsAndPthreadsForSMP(m_sourceImage);
     
     //with direct pixel manipulation and Ne10 vector operations
-    applySepiaToneWithDirectPixelManipulationsAndNe10(m_sourceImage);
+    //applySepiaToneWithDirectPixelManipulationsAndNe10(m_sourceImage);
 
     //with ne10 and SMP (pthreads)
     //applySepiaToneWithDirectPixelManipulationsAndNe10AndPthreadsForSMP(m_sourceImage);
@@ -1139,7 +1158,7 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_doChainOfImageProcessingOp
     //applySepiaToneWithDirectPixelManipulationsAndNeonSSE(m_sourceImage);
     
     //with neon and SMP
-    //applySepiaToneWithDirectPixelManipulationsAndNeonSSEAndPthreadsForSMP(m_sourceImage);
+    applySepiaToneWithDirectPixelManipulationsAndNeonSSEAndPthreadsForSMP(m_sourceImage);
 
     
     processingFinished = true;
@@ -1147,6 +1166,90 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_doChainOfImageProcessingOp
     
 }
 
+JNIEXPORT
+jfloat
+JNICALL
+Java_org_openparallel_imagethresh_ImageThreshActivity_STWithOpenCV(JNIEnv* env,
+                                                                   jobject thiz){
+    //original with OpenCV
+    applySepiaTone(m_sourceImage);
+    
+    return timeStamp;
+}
+
+JNIEXPORT
+jfloat
+JNICALL
+Java_org_openparallel_imagethresh_ImageThreshActivity_STWithManualManips(JNIEnv* env,
+                                                                         jobject thiz){
+    
+    //with direct pixel manipulations
+    applySepiaToneWithDirectPixelManipulations(m_sourceImage);
+    
+    return timeStamp;
+}
+
+JNIEXPORT
+jfloat
+JNICALL
+Java_org_openparallel_imagethresh_ImageThreshActivity_STWithManualManipsAndSMP(JNIEnv* env,
+                                                                                   jobject thiz){
+    
+    //with direct pixel manipulations and pthreads
+    applySepiaToneWithDirectPixelManipulationsAndPthreadsForSMP(m_sourceImage);
+    
+    return timeStamp;
+}
+
+JNIEXPORT
+jfloat
+JNICALL
+Java_org_openparallel_imagethresh_ImageThreshActivity_STWithNeTen(JNIEnv* env,
+                                                                     jobject thiz){
+    
+    //with direct pixel manipulation and Ne10 vector operations
+    applySepiaToneWithDirectPixelManipulationsAndNe10(m_sourceImage);
+    
+    return timeStamp;
+}
+
+JNIEXPORT
+jfloat
+JNICALL
+Java_org_openparallel_imagethresh_ImageThreshActivity_STWithNeTenAndSMP(JNIEnv* env,
+                                                                       jobject thiz){
+    
+    //with ne10 and SMP (pthreads)
+    applySepiaToneWithDirectPixelManipulationsAndNe10AndPthreadsForSMP(m_sourceImage);
+    
+    return timeStamp;
+}
+
+JNIEXPORT
+jfloat
+JNICALL
+Java_org_openparallel_imagethresh_ImageThreshActivity_STWithNeon(JNIEnv* env,
+                                                                 jobject thiz){
+    
+    //with neon
+    applySepiaToneWithDirectPixelManipulationsAndNeonSSE(m_sourceImage);
+    
+    return timeStamp;
+}
+
+JNIEXPORT
+jfloat
+JNICALL
+Java_org_openparallel_imagethresh_ImageThreshActivity_STWithNeonAndSMP(JNIEnv* env,
+                                                                       jobject thiz){
+    
+    //with neon and SMP
+    applySepiaToneWithDirectPixelManipulationsAndNeonSSEAndPthreadsForSMP(m_sourceImage);
+    
+    return timeStamp;
+}
+
+//end of new functions
 
 JNIEXPORT
 jboolean

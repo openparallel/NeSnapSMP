@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <resources>
 	<dimen name="big_text">25dip</dimen>
-	<dimen name="mid_text">18dip</dimen>
+	<dimen name="mid_text">12dip</dimen>
+	<dimen name="larger_text">18dip</dimen>
 </resources>

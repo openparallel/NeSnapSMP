@@ -20,20 +20,22 @@
     android:layout_height="wrap_content">
     
 		<Button
-		android:id="@+id/fun_house_button"
-		android:layout_alignParentLeft="true"
-		android:layout_width="180dp"
-		android:layout_height="wrap_content"
-		android:text="@string/fun_house_text" 
-		android:textSize="@dimen/mid_text"/>
+		    android:id="@+id/sepia_tone_with_opencv"
+		    android:layout_width="180dp"
+		    android:layout_height="wrap_content"
+		    android:layout_alignParentLeft="true"
+		    android:text="@string/sepia_tone_with_opencv_text"
+		    android:textSize="@dimen/mid_text" />
 		
 		<Button
-		android:id="@+id/sketch_book_button"
-		android:layout_alignParentRight="true"
-		android:layout_width="180dp"
-		android:layout_height="wrap_content"
-		android:text="@string/sketch_book_text" 
-		android:textSize="@dimen/mid_text"/>
+		    android:id="@+id/sepia_tone_with_manual_manips"
+		    android:layout_width="180dp"
+		    android:layout_height="wrap_content"
+		    android:layout_alignBottom="@+id/sepia_tone_with_opencv"
+		    android:layout_alignParentRight="true"
+		    android:layout_toRightOf="@+id/sepia_tone_with_opencv"
+		    android:text="@string/sepia_tone_with_manual_manips_text"
+		    android:textSize="@dimen/mid_text" />
 	
 	</RelativeLayout>
 	
@@ -43,25 +45,74 @@
     android:layout_height="wrap_content">
 		
 		<Button
-		android:id="@+id/sepia_tone_button"
-		android:layout_alignParentLeft="true"
-		android:layout_width="180dp"
-		android:layout_height="wrap_content"
-		android:text="@string/sepia_tone_text" 
-		android:textSize="@dimen/mid_text"/>
+		    android:id="@+id/sepia_tone_with_manual_manips_and_smp"
+		    android:layout_width="180dp"
+		    android:layout_height="wrap_content"
+		    android:layout_alignBottom="@+id/sepia_tone_with_ne10"
+		    android:layout_alignParentLeft="true"
+		    android:text="@string/sepia_tone_with_manual_manips_and_smp_text"
+		    android:textSize="@dimen/mid_text" />
 		
 		<Button
-		android:id="@+id/neonise_button"
-		android:layout_alignParentRight="true"
-		android:layout_width="180dp"
-		android:layout_height="wrap_content"
-		android:text="@string/neonise_text" 
-		android:textSize="@dimen/mid_text"/>
+		    android:id="@+id/sepia_tone_with_ne10"
+		    android:layout_width="180dp"
+		    android:layout_height="wrap_content"
+		    android:layout_alignParentRight="true"
+		    android:layout_toRightOf="@+id/sepia_tone_with_manual_manips_and_smp"
+		    android:text="@string/sepia_tone_with_ne10_text"
+		    android:textSize="@dimen/mid_text" />
 	
 	</RelativeLayout>
 	
+	<RelativeLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+		
+		<Button
+		    android:id="@+id/sepia_tone_with_ne10_and_smp"
+		    android:layout_width="180dp"
+		    android:layout_height="wrap_content"
+		    android:layout_alignParentLeft="true"
+		    android:text="@string/sepia_tone_with_ne10_and_smp_text"
+		    android:textSize="@dimen/mid_text" />
+		
+		<Button
+		    android:id="@+id/sepia_tone_with_neon"
+		    android:layout_width="180dp"
+		    android:layout_height="wrap_content"
+		    android:layout_alignParentRight="true"
+		    android:layout_toRightOf="@+id/sepia_tone_with_ne10_and_smp"
+		    android:text="@string/sepia_tone_with_neon_text"
+		    android:textSize="@dimen/mid_text" />
+	
+	</RelativeLayout>
+	
+	<RelativeLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+		
+		<Button
+		    android:id="@+id/sepia_tone_with_neon_and_smp"
+		    android:layout_width="180dp"
+		    android:layout_height="wrap_content"
+		    android:layout_alignParentLeft="true"
+		    android:text="@string/sepia_tone_with_neon_and_smp_text"
+		    android:textSize="@dimen/mid_text" />
+	
+		<TextView
+			android:id="@+id/runtimeResultTextField"
+			android:layout_width="180dp"
+			android:layout_height="wrap_content"
+		    android:layout_alignParentRight="true"
+		    android:layout_toRightOf="@+id/sepia_tone_with_neon_and_smp"
+		    android:textSize="@dimen/larger_text"/>
+		
+	</RelativeLayout>
+	
 	<ImageView android:id="@+id/imageView1" 
-	    android:layout_height="390dp" 
+	    android:layout_height="310dp" 
 	    android:src="@raw/mainsplash" 
 	    android:layout_width="fill_parent"/>
 	

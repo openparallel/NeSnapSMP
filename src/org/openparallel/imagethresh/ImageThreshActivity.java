@@ -33,6 +33,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.hardware.Camera;
 
 @SuppressLint("ParserError")
@@ -55,13 +56,23 @@ public class ImageThreshActivity extends Activity {
 	public native void setWorkingDir(String string);
 	public native boolean imageProcessingHasFinished();
 	public native String stringFromJNI();
-
+	
+	public native float STWithOpenCV();
+	public native float STWithManualManips();
+	public native float STWithManualManipsAndSMP();
+	public native float STWithNeTen();
+	public native float STWithNeTenAndSMP();
+	public native float STWithNeon();
+	public native float STWithNeonAndSMP();
+	
 	//Image capture constants
 	final int PICTURE_ACTIVITY = 1000; // This is only really needed if you are catching the results of more than one activity.  It'll make sense later.
 	public static final String TEMP_PREFIX = "tmp_";
 
 	//private variables needed for image capture
 	private ImageView imageView;
+	private TextView runtimeView;
+	
 	private Uri imageUri;
 
 	//these variables are used to determine the front or back camera
@@ -85,18 +96,24 @@ public class ImageThreshActivity extends Activity {
 		this.WorkoutCameraResolutions();
 		this.LogCameraResolutions();
 
-
 		//rig up a camera button to collect images and to run the bulk of the app when a good photo is taken
-		final Button sepiaToneButton = (Button)findViewById(R.id.sepia_tone_button); // Get a handle to the button so we can add a handler for the click event 
-		final Button sketchBookButton = (Button)findViewById(R.id.sketch_book_button); // Get a handle to the button so we can add a handler for the click event 
-		final Button funHouseButton = (Button)findViewById(R.id.fun_house_button); // Get a handle to the button so we can add a handler for the click event 
-		final Button neoniseButton = (Button)findViewById(id.neonise_button);
-
+		final Button sepiaToneOpenCVButton = (Button)findViewById(R.id.sepia_tone_with_opencv);
+		final Button sepiaToneWithManualManipsButton = (Button)findViewById(R.id.sepia_tone_with_manual_manips);
+		final Button sepiaToneWithManualManipsAndSMPButton = (Button)findViewById(R.id.sepia_tone_with_manual_manips_and_smp);
+		final Button sepiaToneWithNe10Button = (Button)findViewById(R.id.sepia_tone_with_ne10);
+		final Button sepiaToneWithNe10AndSMPButton = (Button)findViewById(R.id.sepia_tone_with_ne10_and_smp);
+		final Button sepiaToneWithNeonButton = (Button)findViewById(R.id.sepia_tone_with_neon);
+		final Button sepiaToneWithNeonAndSMPButton = (Button)findViewById(R.id.sepia_tone_with_neon_and_smp);
+		
+		runtimeView = (TextView)findViewById(id.runtimeResultTextField);
 		imageView = (ImageView)findViewById(id.imageView1);
+		
+		runtimeView.setText("Runtime (Sec) = 0");
+		
 
 		final Button saveButton = (Button)findViewById(id.save_button);
 
-		sepiaToneButton.setOnClickListener(new OnClickListener() {
+		sepiaToneOpenCVButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v){
@@ -117,7 +134,7 @@ public class ImageThreshActivity extends Activity {
 			}
 		});
 
-		sketchBookButton.setOnClickListener(new OnClickListener() {
+		sepiaToneWithManualManipsButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v){
@@ -137,8 +154,8 @@ public class ImageThreshActivity extends Activity {
 
 			}
 		});
-
-		funHouseButton.setOnClickListener(new OnClickListener() {
+		
+		sepiaToneWithManualManipsAndSMPButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v){
@@ -158,8 +175,8 @@ public class ImageThreshActivity extends Activity {
 
 			}
 		});
-
-		neoniseButton.setOnClickListener(new OnClickListener() {
+		
+		sepiaToneWithNe10Button.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v){
@@ -176,10 +193,73 @@ public class ImageThreshActivity extends Activity {
 				cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
 
 				startActivityForResult(cameraIntent, PICTURE_ACTIVITY); // This will cause the onActivityResult event to fire once it's done
-				
+
 			}
 		});
 
+		sepiaToneWithNe10AndSMPButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v){
+				effectNo = 5;
+
+				Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE); // Normally you would populate this with your custom intent.
+
+				ContentValues values = new ContentValues();
+				values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+				imageUri = getContentResolver().insert(
+						MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+
+				cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+
+				startActivityForResult(cameraIntent, PICTURE_ACTIVITY); // This will cause the onActivityResult event to fire once it's done
+
+			}
+		});
+		
+		sepiaToneWithNeonButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v){
+				effectNo = 6;
+
+				Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE); // Normally you would populate this with your custom intent.
+
+				ContentValues values = new ContentValues();
+				values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+				imageUri = getContentResolver().insert(
+						MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+
+				cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+
+				startActivityForResult(cameraIntent, PICTURE_ACTIVITY); // This will cause the onActivityResult event to fire once it's done
+
+			}
+		});
+		
+		sepiaToneWithNeonAndSMPButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v){
+				effectNo = 7;
+
+				Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE); // Normally you would populate this with your custom intent.
+
+				ContentValues values = new ContentValues();
+				values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+				imageUri = getContentResolver().insert(
+						MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+
+				cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+
+				startActivityForResult(cameraIntent, PICTURE_ACTIVITY); // This will cause the onActivityResult event to fire once it's done
+
+			}
+		});
+		
 		saveButton.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -382,6 +462,7 @@ public class ImageThreshActivity extends Activity {
 					Log.i("Captain's Log", "Image Passed into the NDK");
 
 					if(didSet){
+						float runTime = 0;
 						boolean benchmarking = false;
 						if(benchmarking){
 							//process the data
@@ -391,24 +472,30 @@ public class ImageThreshActivity extends Activity {
 								this.setSourceImage(data, w, h);
 								float startnow = android.os.SystemClock.uptimeMillis();
 
-								boolean didDoChainOfImageProcessingOperations = false;
+								
 
 								switch(effectNo){
 								case 1:
-									//sepia toning
-									didDoChainOfImageProcessingOperations = this.doChainOfImageProcessingOperations();
+									runTime = this.STWithOpenCV();
 									break;
 								case 2:
-									//apply sketchbook effect
-									didDoChainOfImageProcessingOperations = this.applySketchbookEffect();
+									runTime = this.STWithManualManips();
 									break;
 								case 3:
-									//apply funhouse effect
-									didDoChainOfImageProcessingOperations = this.applyFunhouseEffect();
+									runTime = this.STWithManualManipsAndSMP();
 									break;
 								case 4:
-									//apply neonising effect
-									didDoChainOfImageProcessingOperations = this.applyNeonising();
+									runTime = this.STWithNeTen();
+									break;
+									
+								case 5:
+									runTime = this.STWithNeTenAndSMP();
+									break;
+								case 6:
+									runTime = this.STWithNeon();
+									break;
+								case 7:
+									runTime = this.STWithNeonAndSMP();
 									break;
 								}
 
@@ -416,15 +503,7 @@ public class ImageThreshActivity extends Activity {
 								Log.d("MYTAG", "Excution time: "+(endnow-startnow)+" ms");
 								runtimes[i] = endnow-startnow;
 
-
-								//if the NDK hasn't finished why should you progress?
-								while (!this.imageProcessingHasFinished()){
-									wait(100);
-								}
-
-								if (!didDoChainOfImageProcessingOperations){
-									Log.e("Captain's Log", "Applying the chain of Image Processing Operations Failed");
-								}
+								
 							}
 
 							String file = "/runtimes.txt";
@@ -458,39 +537,34 @@ public class ImageThreshActivity extends Activity {
 							//we don't need 100 iterations of the same thing, so we test it once
 							float startnow = android.os.SystemClock.uptimeMillis();
 
-							boolean didDoChainOfImageProcessingOperations = false;
-
 							switch(effectNo){
 							case 1:
-								//sepia toning
-								didDoChainOfImageProcessingOperations = this.doChainOfImageProcessingOperations();
+								runTime = this.STWithOpenCV();
 								break;
 							case 2:
-								//apply sketchbook effect
-								didDoChainOfImageProcessingOperations = this.applySketchbookEffect();
+								runTime = this.STWithManualManips();
 								break;
 							case 3:
-								//apply funhouse effect
-								didDoChainOfImageProcessingOperations = this.applyFunhouseEffect();
+								runTime = this.STWithManualManipsAndSMP();
 								break;
 							case 4:
-								//apply neonising effect
-								didDoChainOfImageProcessingOperations = this.applyNeonising();
+								runTime = this.STWithNeTen();
+								break;
+								
+							case 5:
+								runTime = this.STWithNeTenAndSMP();
+								break;
+							case 6:
+								runTime = this.STWithNeon();
+								break;
+							case 7:
+								runTime = this.STWithNeonAndSMP();
 								break;
 							}
 
 							float endnow = android.os.SystemClock.uptimeMillis();
 							Log.d("MYTAG", "Execution time: "+(endnow-startnow)+" ms");
 
-
-							//if the NDK hasn't finished why should you progress?
-							while (!this.imageProcessingHasFinished()){
-								wait(100);
-							}
-
-							if (!didDoChainOfImageProcessingOperations){
-								Log.e("Captain's Log", "Applying the chain of Image Processing Operations Failed");
-							}
 						}	
 
 
@@ -503,7 +577,9 @@ public class ImageThreshActivity extends Activity {
 						//process the OpenCV returned data back into a usable bitmap and display it
 						Bitmap resultPhoto = BitmapFactory.decodeByteArray(resultData, 0, resultData.length);
 
+						runtimeView.setText("Runtime (Sec) =" + Float.toString(runTime));
 						imageView.setImageBitmap(resultPhoto);
+						
 					}else{
 						//could notify the user that opencv has a problem
 						Log.i("Captain's Log", "setting image was not very successful... thanks OpenCV");
