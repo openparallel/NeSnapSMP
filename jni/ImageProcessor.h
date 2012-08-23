@@ -16,11 +16,12 @@
 #include <string.h>
 #include <time.h>
 #include <pthread.h>
+#include <arm_neon.h>
 
-//#define MIN(a,b) (((a)<(b))?(a):(b))
-//#define MAX(a,b) (((a)>(b))?(a):(b))
-#define MIN(a,b) (b ^ ((a ^ b) & -(a < b)))
-#define MAX(a,b) (a ^ ((a ^ b) & -(a < b)))
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+//#define MIN(a,b) (b ^ ((a ^ b) & -(a < b)))
+//#define MAX(a,b) (a ^ ((a ^ b) & -(a < b)))
 
 #ifndef ANDROID
 
