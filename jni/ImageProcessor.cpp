@@ -81,43 +81,34 @@ uint8x8_t vdiv3_u8(uint8x8_t in){
     return in;
 }
 
-void applySepiaToneWithDirectPixelManipulationsAndNeonSSEAndPthreadsForSMP(IplImage* target){
+const int NUMBER_OF_THREADS = 4;
+
+struct thread_data_neon
+{
+    int	thread_id;
     
-    //allocate vectors
-    uint8_t *b = new uint8_t[target->height*target->width];
-    uint8_t *g = new uint8_t[target->height*target->width];
-    uint8_t *r = new uint8_t[target->height*target->width];
+    int image_size;
+    uint8_t *r;
+    uint8_t *g;
+    uint8_t *b;
+};
+
+struct thread_data_neon thread_data_array_neon[NUMBER_OF_THREADS];
+
+
+
+void *doThreadGruntworkNeon(void*threadarg){
     
-    uint8_t* rptr = r;
-    uint8_t* bptr = b;
-    uint8_t* gptr = g;
+    struct thread_data_neon *my_data;
     
-    //collect image pixels into vectors
-    int i=0; //pixel Position
-    for( int y=0; y<target->height; y++ ){
-        uchar* ptr = (uchar*) (
-                               target->imageData + y * target->widthStep
-                               );
-        
-        for( int x=0; x<target->width; x++ ) {
-            b[i] = ptr[3*x+0];
-            g[i] = ptr[3*x+1];
-            r[i] = ptr[3*x+2];
-            
-            i++;
-        }
-    }
+    my_data = (struct thread_data_neon *) threadarg;
     
+    //but do work on your quarter of the image
+    int segment = my_data->image_size/NUMBER_OF_THREADS;
+    int startPoint = my_data->thread_id * segment;
+    int stopPoint = (my_data->thread_id+1) * segment;
     
-#ifdef TIMEIT
-    //on the clock
-    clock_t begin, end;
-    double time_spent;
-    //gettimeofday()
-    begin = clock();
-#endif
-    
-    int n = target->width*target->height;
+    int n = stopPoint;
     
     uint8x8_t rfac = vdup_n_u8 (40);
     uint8x8_t gfac = vdup_n_u8 (20);
@@ -125,10 +116,12 @@ void applySepiaToneWithDirectPixelManipulationsAndNeonSSEAndPthreadsForSMP(IplIm
     
     uint8x8_t imin = vdup_n_u8 (0);
     uint8x8_t imax = vdup_n_u8 (255);
+        
+    uint8_t *rptr = my_data->r+startPoint;
+    uint8_t *bptr = my_data->b+startPoint;
+    uint8_t *gptr = my_data->g+startPoint;
     
-    n/=8;
-    
-    for (int j=0; j<n; j++){
+    for (int j=startPoint; j<stopPoint; j+=8){
         //get values for this block
         uint8x8_t red = vld1_u8(rptr);
         uint8x8_t grn = vld1_u8(gptr);
@@ -164,6 +157,68 @@ void applySepiaToneWithDirectPixelManipulationsAndNeonSSEAndPthreadsForSMP(IplIm
         gptr+=8;
     }
 
+    
+    pthread_exit(NULL);
+}
+
+void applySepiaToneWithDirectPixelManipulationsAndNeonSSEAndPthreadsForSMP(IplImage* target){
+    
+    //allocate vectors
+    uint8_t *b = new uint8_t[target->height*target->width];
+    uint8_t *g = new uint8_t[target->height*target->width];
+    uint8_t *r = new uint8_t[target->height*target->width];
+    
+    
+    //collect image pixels into vectors
+    int i=0; //pixel Position
+    for( int y=0; y<target->height; y++ ){
+        uchar* ptr = (uchar*) (
+                               target->imageData + y * target->widthStep
+                               );
+        
+        for( int x=0; x<target->width; x++ ) {
+            b[i] = ptr[3*x+0];
+            g[i] = ptr[3*x+1];
+            r[i] = ptr[3*x+2];
+            
+            i++;
+        }
+    }
+    
+    
+#ifdef TIMEIT
+    //on the clock
+    clock_t begin, end;
+    double time_spent;
+    //gettimeofday()
+    begin = clock();
+#endif
+    
+    
+    //partition the toning into 4 threads
+    pthread_t threads[NUMBER_OF_THREADS];
+    int rc;
+    for (int t = 0; t < NUMBER_OF_THREADS; t ++) {
+        //load up resources for this thread
+        thread_data_array_neon[t].thread_id = t;
+        thread_data_array_neon[t].r = r;
+        thread_data_array_neon[t].g = g;
+        thread_data_array_neon[t].b = b;
+        thread_data_array_neon[t].image_size = target->width*target->height;
+        
+        rc = pthread_create(&threads[t], NULL, doThreadGruntworkNeon, (void *)
+                            &thread_data_array_neon[t]);
+        if (rc) {
+            LOGE("ERROR -> pthread_create() the thread was not born");
+        }
+    }
+    
+    //syncronise
+    if(pthread_join(*threads,NULL)){
+        LOGE("ERROR -> pthread_join() the threads weren't stuck back together");
+    }
+
+    
     
 #ifdef TIMEIT
     //off the clock
@@ -323,9 +378,7 @@ void applySepiaToneWithDirectPixelManipulationsAndNeonSSE(IplImage* target){
     
 }
 
-const int NUMBER_OF_THREADS = 4;
-
-struct neon_thread_data
+struct thread_data_ne10
 {
     int	thread_id;
     
@@ -335,13 +388,13 @@ struct neon_thread_data
     float *b;
 };
 
-struct neon_thread_data neon_thread_data_array[NUMBER_OF_THREADS];
+struct thread_data_ne10 thread_data_ne10_array[NUMBER_OF_THREADS];
 
 
 void *doThreadGruntworkWithNe10(void*threadarg){
-    struct neon_thread_data *my_data;
+    struct thread_data_ne10 *my_data;
     
-    my_data = (struct neon_thread_data *) threadarg;
+    my_data = (struct thread_data_ne10 *) threadarg;
     
     //but do work on your quarter of the image
     int segment = my_data->image_size/NUMBER_OF_THREADS;
@@ -354,113 +407,39 @@ void *doThreadGruntworkWithNe10(void*threadarg){
     float *g = my_data->g+startPoint;
     float *b = my_data->b+startPoint;
     
-
-    //do sepia processing
-    float* tmp = new float[segment];
-
-    /*
-     * Start of for loop to partition into subvectors
-     int totSize = target->width*target->height;
-     
-     int size = 8;
-     
-     //    char tmp_str[22];
-     //    sprintf(tmp_str,"%i",totSize);
-     //
-     //    LOGE("The size of the image is ");
-     //    LOGE(tmp_str);
-     
-     
-     float* tmp = new float[size];
-     
-     //to avoid throttling cache operate on smaller partiotions of the vectors
-     for (int i = 0 ; i < totSize; i += size) {
-     
-     add_float_c(tmp, b+i, g+i, size);
-     add_float_c(b+i, tmp, r+i, size);
-     //divc_float_c(tmp, b+i, 3, size);
-     mulc_float_c(tmp, b+i, 0.3f, size);
-     
-     //set the other 2 vectors with the same greyscale value... da-doi
-     //b = tmp;
-     memcpy(b+i, tmp, sizeof(float) * size);
-     
-     //g = b;
-     memcpy(g+i, tmp, sizeof(float) * size);
-     
-     //r = b;
-     memcpy(r+i, tmp, sizeof(float) * size);
-     
-     subc_float_c(b+i, b+i, 20.0f, size);
-     addc_float_c(g+i, g+i, 20.0f, size);
-     addc_float_c(r+i, r+i, 40.0f, size);
-     
-     
-     for (int j = 0; j < size; j++) {
-     int pos = i+j;
-     b[pos] = MAX(b[pos],0);
-     g[pos] = MIN(g[pos],255);
-     r[pos] = MIN(r[pos],255);
-     }
-     }
-
-     */
+    int size = 8;
+    float* tmp = new float[size];
     
-    //store the greyscale value into the blue vector
-    //b[i] = round((b[i] + g[i] + r[i])/3);
-    add_float_c(tmp, b, g, segment);
-    
-    add_float_c(b, tmp, r, segment);
-    
-    divc_float_c(tmp, b, 3, segment);
-    
-    //set the other 2 vectors with the same greyscale value... da-doi
-    //b = tmp;
-    memcpy(b, tmp, sizeof(float) * segment);
-    
-    //g = b;
-    memcpy(g, tmp, sizeof(float) * segment);
-    
-    //r = b;
-    memcpy(r, tmp, sizeof(float) * segment);
-    
-    //scale to give it a reddish-brown (sepia) tinge
-    //        b[i] -= 20;
-    //        g[i] += 20;
-    //        r[i] += 40;
-    subc_float_c(b, b, 20.0f, segment);
-    
-    addc_float_c(g, g, 20.0f, segment);
-    
-    addc_float_c(r, r, 40.0f, segment);
-    
-    //ensure that everything is in bounds (this is done implicitly in OpenCV)
-    //        if (b[i] < 0) {
-    //            b[i] = 0;
-    //        }
-    //
-    //        if (g[i] > 255) {
-    //            g[i] = 255;
-    //        }
-    //
-    //        if (r[i] > 255) {
-    //            r[i] = 255;
-    //        }
-    
-    for (int i = 0; i < segment; i++) {
-        if (b[i] < 0) {
-            b[i] = 0;
-        }
+    //to avoid throttling cache operate on smaller partiotions of the vectors
+    for (int i = 0 ; i < segment; i += size) {
         
-        if (g[i] > 255) {
-            g[i] = 255;
-        }
+        add_float_c(tmp, b+i, g+i, size);
+        add_float_c(b+i, tmp, r+i, size);
+        //divc_float_c(tmp, b+i, 3, size);
+        mulc_float_c(tmp, b+i, 0.3f, size);
         
-        if (r[i] > 255) {
-            r[i] = 255;
+        //set the other 2 vectors with the same greyscale value... da-doi
+        //b = tmp;
+        memcpy(b+i, tmp, sizeof(float) * size);
+        
+        //g = b;
+        memcpy(g+i, tmp, sizeof(float) * size);
+        
+        //r = b;
+        memcpy(r+i, tmp, sizeof(float) * size);
+        
+        subc_float_c(b+i, b+i, 20.0f, size);
+        addc_float_c(g+i, g+i, 20.0f, size);
+        addc_float_c(r+i, r+i, 40.0f, size);
+        
+        
+        for (int j = 0; j < size; j++) {
+            int pos = i+j;
+            b[pos] = MAX(b[pos],0);
+            g[pos] = MIN(g[pos],255);
+            r[pos] = MIN(r[pos],255);
         }
     }
-
     delete tmp;
 
     pthread_exit(NULL);
@@ -503,14 +482,14 @@ void applySepiaToneWithDirectPixelManipulationsAndNe10AndPthreadsForSMP(IplImage
     int rc;
     for (int t = 0; t < NUMBER_OF_THREADS; t ++) {
         //load up resources for this thread
-        neon_thread_data_array[t].thread_id = t;
-        neon_thread_data_array[t].r = r;
-        neon_thread_data_array[t].g = g;
-        neon_thread_data_array[t].b = b;
-        neon_thread_data_array[t].image_size = target->width*target->height;
+        thread_data_ne10_array[t].thread_id = t;
+        thread_data_ne10_array[t].r = r;
+        thread_data_ne10_array[t].g = g;
+        thread_data_ne10_array[t].b = b;
+        thread_data_ne10_array[t].image_size = target->width*target->height;
         
         rc = pthread_create(&threads[t], NULL, doThreadGruntworkWithNe10, (void *)
-                            &neon_thread_data_array[t]);
+                            &thread_data_ne10_array[t]);
         if (rc) {
             LOGE("ERROR -> pthread_create() the thread was not born");
         }
@@ -682,13 +661,6 @@ void applySepiaToneWithDirectPixelManipulationsAndNe10(IplImage* target){
     int totSize = target->width*target->height;
     
     int size = 8;
-    
-//    char tmp_str[22];
-//    sprintf(tmp_str,"%i",totSize);
-//    
-//    LOGE("The size of the image is ");
-//    LOGE(tmp_str);
-
     
     float* tmp = new float[size];
     
@@ -1158,13 +1130,13 @@ Java_org_openparallel_imagethresh_ImageThreshActivity_doChainOfImageProcessingOp
     //applySepiaToneWithDirectPixelManipulationsAndPthreadsForSMP(m_sourceImage);
     
     //with direct pixel manipulation and Ne10 vector operations
-    //applySepiaToneWithDirectPixelManipulationsAndNe10(m_sourceImage);
+    applySepiaToneWithDirectPixelManipulationsAndNe10(m_sourceImage);
 
     //with ne10 and SMP (pthreads)
     //applySepiaToneWithDirectPixelManipulationsAndNe10AndPthreadsForSMP(m_sourceImage);
 
     //with neon
-    applySepiaToneWithDirectPixelManipulationsAndNeonSSE(m_sourceImage);
+    //applySepiaToneWithDirectPixelManipulationsAndNeonSSE(m_sourceImage);
     
     //with neon and SMP
     //applySepiaToneWithDirectPixelManipulationsAndNeonSSEAndPthreadsForSMP(m_sourceImage);
