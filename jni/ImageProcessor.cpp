@@ -57,6 +57,30 @@ void Log(char* message, bool errorFlag){
     return;
 }
 
+uint8x8_t vdiv3_u8(uint8x8_t in){
+    //widen in
+    uint16x8_t tmp = vmovl_u8(in);
+
+    //q = (n >> 2) + (n >> 4)   ~ q = n * 0.0101 (approx.)
+    uint16x8_t quo = vshrq_n_u16(tmp, 2);
+    quo = vaddq_u16(quo, vshrq_n_u16(tmp, 4));
+    
+    //q = q + (q >> 4)          ~ q = n * 0.01010101
+    quo = vaddq_u16(quo, vshrq_n_u16(quo, 4));
+    //q = q + (q >> 8)          ~ q = n * 0.0101010101010101
+    quo = vaddq_u16(quo, vshrq_n_u16(quo, 8));
+    
+    // r = n - q*3
+    uint16x8_t rem = vsubq_u16(tmp,vmulq_n_u16(quo,3));
+    
+    // return q + (6*r >> 4)
+    tmp = vaddq_u16(quo, vshrq_n_u16(vmulq_n_u16(rem,6),4));
+    
+    //shorten
+    in  = vmovn_u16(tmp);
+    return in;
+}
+
 void applySepiaToneWithDirectPixelManipulationsAndNeonSSE(IplImage* target){
     
     //allocate vectors
@@ -102,9 +126,6 @@ void applySepiaToneWithDirectPixelManipulationsAndNeonSSE(IplImage* target){
     uint8x8_t imin = vdup_n_u8 (0);
     uint8x8_t imax = vdup_n_u8 (255);
     
-    //which is i * 0x55555556 >> 4 = i/3
-    uint8x8_t divs = vdup_n_u8 (0x56);
-    
     n/=8;
     
     for (int j=0; j<n; j++){
@@ -112,24 +133,27 @@ void applySepiaToneWithDirectPixelManipulationsAndNeonSSE(IplImage* target){
         uint8x8_t red = vld1_u8(rptr);
         uint8x8_t grn = vld1_u8(gptr);
         uint8x8_t blu = vld1_u8(bptr);
-
-        //add all channels together
-        red = vadd_u8(red,grn);
-        red = vadd_u8(red,blu);
-        
+        //intensity vector
+        uint8x8_t ins;
         
         //average the channel intensity
-        //red = vmul_u8(red,divs);
-        //red  = vshr_n_u8(red,4);
+        red = vdiv3_u8(red);
+        grn = vdiv3_u8(grn);
+        blu = vdiv3_u8(blu);
+        
+        //add all channels together
+        ins = vadd_u8(blu,vadd_u8(red,grn));
         
         //add sepia weights
-        blu = vsub_u8(red, bfac);
-        grn = vadd_u8(red, gfac);
-        red = vadd_u8(red, rfac);
+        blu = vsub_u8(ins, bfac);
+        grn = vadd_u8(ins, gfac);
+        red = vadd_u8(ins, rfac);
         
         //do boundary checks
         blu = vmax_u8(blu, imin);
+        
         red = vmin_u8(red, imax);
+        
         grn = vmin_u8(grn, imax);
         
         //set values for this block
